@@ -87,6 +87,28 @@ Documentation is part of the implementation.
 A change is incomplete if it changes behavior, architecture, workflow, storage format,
 or operational behavior without updating the related documentation.
 
+## Versioning and releases
+AsterKV uses `MAJOR.MINOR.PATCH` versions and annotated release tags in the
+`vMAJOR.MINOR.PATCH` format.
+
+Examples:
+```text
+v0.1.0
+v0.1.1
+v0.2.0
+```
+
+Not every merge to `main` is release.
+
+Release tags are created only from `main`.
+
+Documentation-only, conventions-only, bootstrap, and incomplete milestone changes
+do not receive release tags.
+
+See:
+- [docs/releases/VERSIONING.md](docs/releases/VERSIONING.md)
+- [docs/releases/release-process.md](docs/releases/release-process.md)
+
 ## Tests
 Behavioral change must include tests.
 

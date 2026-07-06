@@ -11,3 +11,4 @@ or developer workflow must update the relevant documentation.
 | `architecture/` | Architecture, module boundaries, and project structure. |
 | `decisions/` | Architectural Decision Records |
 | `development/` | Build, coding style, testing, and git workflow |
+| `releases/` | Versioning, release process, and release checklist |
