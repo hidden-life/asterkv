@@ -1,57 +1,78 @@
 # Git Workflow
-AsterKV uses small, reviewable commits.
+AsterKV uses small, reviewable commits and dedicated branches for every development step.
+
+## Rule
+A branch must be created before implementation starts.
+
+Do not implement directly on `main`.
 
 ## Branch naming
-Recommended branch format:
+Use one of the following prefixes:
 ```text
-feature/<scope>
-fix/<scope>
-docs/<scope>
-refactor/<scope>
-test/<scope>
+feature/
+fix/
+docs/
+refactor/
+test/
+build/
+ci/
 ```
 
 Examples:
 ```text
-feature/bootstrap
+feature/project-conventions
 feature/protocol-parser
 feature/in-memory-storage
+docs/storage-format
+```
+
+## Step workflow
+Every development step follows the same sequence:
+```bash
+git checkout main
+git pull --ff-only origin main
+git checkout -b feature/<scope>
+```
+
+Then:
+```bash
+cmake --preset debug
+cmake --build --preset debug
+ctest --preset debug
+git status
+git diff
+```
+
+After verification:
+```bash
+git add .
+git commit -m "<type>(<scope>): <description>"
+```
+
+Push the branch:
+```bash
+git push -u origin feature/<scope>
 ```
 
 ## Commit format
-AsterKV uses conventional commits.
+AsterKV uses conventional commits:
+```text
+<type>(<scope>): <description>
+```
 
 Examples:
 ```text
 feat(project): bootstrap repository structure
-feat(storage): add in-memory key-value engine
-fix(protocol): reject malformed set command
-docs(architecture): describe project layout
+refactor(core): align naming conventions
+docs(development): add coding style guide
 test(storage): cover missing key lookup
 ```
 
-## Step workflow
-For every development step:
-1. Create or switch to a feature branch.
-2. Implement the smallest useful slice.
-3. Update documentation.
-4. Build.
-5. Run tests.
-6. Review git diff.
-7. Commit with a conventional commit message.
+## Main branch
+The `main` branch should remain buildable.
 
-## Bootstrap commit
-```bash
-git checkout -b feature/bootstrap
-
-git status
-git add .
-git commit -m "feat(project): bootstrap AsterKV repository structure"
-```
-
-## Push
-```bash
-git push -u origin feature/bootstrap
-```
-
-After review or local verification, merge into `main`.
+Feature branches are merged only after:
+- successful build;
+- successful tests;
+- documentation update;
+- reviewed diff.
