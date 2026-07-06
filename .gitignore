@@ -1,0 +1,43 @@
+# Build directories
+build/
+cmake-build-*/
+out/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+
+# Ninja / Make
+.ninja_deps
+.ninja_log
+Makefile
+
+# CLion / JetBrains
+.idea/
+*.iml
+
+# VScode
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Binaries / objects
+*.o
+*.obj
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+
+# Logs
+*.log
+
+# Runtime data, future AsterKV node data
+data/
+tmp/
