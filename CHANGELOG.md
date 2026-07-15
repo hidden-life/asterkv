@@ -14,6 +14,10 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added initial core version metadata.
 - Added project coding conventions.
 - Added versioning and release policy documentation.
+- Added `AsterKV::Core::Status` for explicit operation status reporting.
+- Added `AsterKV::Core::Result<T>` for value-or-error return handling.
+- Added GoogleTest-based unit tests for the core status/result model.
+- Added development dependency documentation.
 
 ### Changed
 - Aligned C++ naming conventions:

@@ -25,6 +25,10 @@ src/core        Core project-level utilities.
 The first core library contains only version metadata. New modules are added only
 when implementation starts.
 
+The core library currently contains:
+- version metadata
+- status/result error handling primitives.
+
 ## Planned future modules
 The following modules are planned but not created yet:
 ```text

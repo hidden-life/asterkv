@@ -8,7 +8,7 @@ target_link_libraries(asterd
         AsterKV::Core
 )
 
-asterkv_apply_compiler_options(asterd)
+asterkvApplyCompilerOptions(asterd)
 
 add_test(
         NAME asterd_prints_version

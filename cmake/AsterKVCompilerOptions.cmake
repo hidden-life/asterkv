@@ -1,7 +1,7 @@
-function(asterkv_apply_compiler_options target_name)
-    target_compile_features(${target_name} PUBLIC cxx_std_23)
+function(asterkvApplyCompilerOptions targetName)
+    target_compile_features(${targetName} PUBLIC cxx_std_23)
 
-    set_target_properties(${taget_name}
+    set_target_properties(${targetName}
             PROPERTIES
             CXX_STANDARD 23
             CXX_STANDARD_REQUIRED ON
@@ -9,12 +9,12 @@ function(asterkv_apply_compiler_options target_name)
     )
 
     if (MSVC)
-        target_compile_options(${target_name} PRIVATE
+        target_compile_options(${targetName} PRIVATE
                 /W4
                 /permissive-
         )
     else ()
-        target_compile_options(${target_name} PRIVATE
+        target_compile_options(${targetName} PRIVATE
                 -Wall
                 -Wextra
                 -Wpedantic

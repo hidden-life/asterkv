@@ -7,7 +7,7 @@ target_link_libraries(asterctl
         AsterKV::Core
 )
 
-asterkv_apply_compiler_options(asterctl)
+asterkvApplyCompilerOptions(asterctl)
 
 add_test(
         NAME asterctl_prints_version
