@@ -6,6 +6,7 @@ target_link_libraries(asterkv_public_headers_test
         PRIVATE
 
         AsterKV::Core
+        AsterKV::Command
 )
 
 asterkvApplyCompilerOptions(asterkv_public_headers_test)

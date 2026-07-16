@@ -1,8 +1,10 @@
 #include <asterkv/core/result.h>
 #include <asterkv/core/status.h>
 #include <asterkv/core/version.h>
+#include <asterkv/command/command.h>
 
 #include <string>
+
 
 int main() {
     auto result = AsterKV::Core::Result<std::string>::success("value");
@@ -18,6 +20,11 @@ int main() {
 
     const AsterKV::Core::Version currentVersion = AsterKV::Core::version();
     if (currentVersion.major != 0) {
+        return 1;
+    }
+
+    auto commandType = AsterKV::Command::commandTypeFromString("PING");
+    if (!commandType.isOk()) {
         return 1;
     }
 

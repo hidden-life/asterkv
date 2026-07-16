@@ -1,4 +1,5 @@
 add_subdirectory(headers)
+add_subdirectory(command)
 
 if (ASTERKV_BUILD_UNIT_TESTS)
     find_package(GTest CONFIG QUIET)

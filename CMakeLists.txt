@@ -21,6 +21,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(AsterKVCompilerOptions)
 
 add_subdirectory(src/core)
+add_subdirectory(src/command)
 
 add_subdirectory(apps/asterd)
 add_subdirectory(apps/astercli)

@@ -20,14 +20,18 @@ apps/asterctl   Administrative control tool.
 ## Current libraries
 ```text
 src/core        Core project-level utilities.
+src/command     Command model and validation.
 ```
 
-The first core library contains only version metadata. New modules are added only
-when implementation starts.
-
 The core library currently contains:
-- version metadata
+- version metadata;
 - status/result error handling primitives.
+
+The command library currently contains:
+- command type definitions;
+- command request representation;
+- command name conversion;
+- command argument count validation.
 
 ## Planned future modules
 The following modules are planned but not created yet:
