@@ -22,6 +22,11 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added `CommandType` and `CommandRequest`.
 - Added command name conversion and argument count validation.
 - Added command model tests without additional external dependencies.
+- Added the `AsterKV::Protocol` module.
+- Added line-based command tokenization.
+- Added command line parsing into `AsterKV::Command::CommandRequest`.
+- Added protocol parser tests without additional external dependencies.
+- Added protocol parser architecture documentation and ADR.
 
 ### Changed
 - Aligned C++ naming conventions:
