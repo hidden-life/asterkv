@@ -8,6 +8,8 @@
 
 #include <string>
 
+#include "asterkv/execution/command_dispatcher.h"
+
 
 int main() {
     auto result = AsterKV::Core::Result<std::string>::success("value");
@@ -37,14 +39,11 @@ int main() {
     }
 
     AsterKV::Storage::InMemoryStorage storage;
-    if (!storage.set("key", "value").isOk()) {
+    AsterKV::Execution::CommandDispatcher dispatcher{storage};
+    auto cmdResponse = dispatcher.dispatch(commandRequest.value());
+    if (!cmdResponse.isOk()) {
         return 1;
     }
 
-    auto storageValue = storage.get("key");
-    if (!storageValue.isOk()) {
-        return 1;
-    }
-
-    return storageValue.value() == "value" ? 0 : 1;
+    return cmdResponse.value().value() == "PONG" ? 0 : 1;
 }

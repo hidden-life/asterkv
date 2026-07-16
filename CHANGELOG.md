@@ -32,6 +32,11 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added `InMemoryStorage` with `set`, `get`, `remove`, and `exists` operations.
 - Added storage tests without additional external dependencies.
 - Added storage foundation architecture documentation and ADR.
+- Added the `AsterKV::Execution` module.
+- Added `CommandResponse` and command response types.
+- Added `CommandDispatcher` for executing command requests against `StorageEngine`.
+- Added execution tests without additional external dependencies.
+- Added command dispatcher architecture documentation and ADR.
 
 ### Changed
 - Aligned C++ naming conventions:

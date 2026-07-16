@@ -2,6 +2,7 @@ add_subdirectory(headers)
 add_subdirectory(command)
 add_subdirectory(protocol)
 add_subdirectory(storage)
+add_subdirectory(execution)
 
 if (ASTERKV_BUILD_UNIT_TESTS)
     find_package(GTest CONFIG QUIET)

@@ -24,6 +24,7 @@ add_subdirectory(src/core)
 add_subdirectory(src/command)
 add_subdirectory(src/protocol)
 add_subdirectory(src/storage)
+add_subdirectory(src/execution)
 
 add_subdirectory(apps/asterd)
 add_subdirectory(apps/astercli)

@@ -23,6 +23,7 @@ src/core        Core project-level utilities.
 src/command     Command model and validation.
 src/protocol    Protocol tokenizer/parser foundation.
 src/storage     Storage engine interface and in-memory implementation.
+src/execution   Command dispatching and response model.
 ```
 
 The core library currently contains:
@@ -43,6 +44,11 @@ The protocol library currently contains:
 The storage library currently contains:
 - storage engine interface;
 - in-memory key-value implementation.
+
+The execution library currently contains:
+- command response representation;
+- command dispatcher;
+- command execution against `StorageEngine`.
 
 ## Planned future modules
 The following modules are planned but not created yet:
