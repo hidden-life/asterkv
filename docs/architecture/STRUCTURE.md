@@ -22,6 +22,7 @@ apps/asterctl   Administrative control tool.
 src/core        Core project-level utilities.
 src/command     Command model and validation.
 src/protocol    Protocol tokenizer/parser foundation.
+src/storage     Storage engine interface and in-memory implementation.
 ```
 
 The core library currently contains:
@@ -38,6 +39,10 @@ The protocol library currently contains:
 - line-based command tokenizer;
 - command line parser;
 - conversion from protocol text to `CommandRequest`.
+
+The storage library currently contains:
+- storage engine interface;
+- in-memory key-value implementation.
 
 ## Planned future modules
 The following modules are planned but not created yet:
