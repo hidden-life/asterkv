@@ -27,6 +27,11 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added command line parsing into `AsterKV::Command::CommandRequest`.
 - Added protocol parser tests without additional external dependencies.
 - Added protocol parser architecture documentation and ADR.
+- Added the `AsterKV::Storage` module.
+- Added `StorageEngine` as the storage abstraction.
+- Added `InMemoryStorage` with `set`, `get`, `remove`, and `exists` operations.
+- Added storage tests without additional external dependencies.
+- Added storage foundation architecture documentation and ADR.
 
 ### Changed
 - Aligned C++ naming conventions:

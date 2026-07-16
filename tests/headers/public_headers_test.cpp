@@ -2,10 +2,11 @@
 #include <asterkv/core/status.h>
 #include <asterkv/core/version.h>
 #include <asterkv/command/command.h>
+#include <asterkv/protocol/parser.h>
+#include <asterkv/storage/in_memory_storage.h>
+#include <asterkv/storage/storage_engine.h>
 
 #include <string>
-
-#include "asterkv/protocol/parser.h"
 
 
 int main() {
@@ -35,5 +36,15 @@ int main() {
         return 1;
     }
 
-    return 0;
+    AsterKV::Storage::InMemoryStorage storage;
+    if (!storage.set("key", "value").isOk()) {
+        return 1;
+    }
+
+    auto storageValue = storage.get("key");
+    if (!storageValue.isOk()) {
+        return 1;
+    }
+
+    return storageValue.value() == "value" ? 0 : 1;
 }
