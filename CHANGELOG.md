@@ -18,6 +18,10 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added `AsterKV::Core::Result<T>` for value-or-error return handling.
 - Added GoogleTest-based unit tests for the core status/result model.
 - Added development dependency documentation.
+- Added the `AsterKV::Command` module.
+- Added `CommandType` and `CommandRequest`.
+- Added command name conversion and argument count validation.
+- Added command model tests without additional external dependencies.
 
 ### Changed
 - Aligned C++ naming conventions:
