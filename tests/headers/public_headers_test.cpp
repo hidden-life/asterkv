@@ -5,6 +5,8 @@
 
 #include <string>
 
+#include "asterkv/protocol/parser.h"
+
 
 int main() {
     auto result = AsterKV::Core::Result<std::string>::success("value");
@@ -25,6 +27,11 @@ int main() {
 
     auto commandType = AsterKV::Command::commandTypeFromString("PING");
     if (!commandType.isOk()) {
+        return 1;
+    }
+
+    auto commandRequest = AsterKV::Protocol::parseCommandLine("PING");
+    if (!commandRequest.isOk()) {
         return 1;
     }
 

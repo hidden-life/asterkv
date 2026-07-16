@@ -22,6 +22,7 @@ include(AsterKVCompilerOptions)
 
 add_subdirectory(src/core)
 add_subdirectory(src/command)
+add_subdirectory(src/protocol)
 
 add_subdirectory(apps/asterd)
 add_subdirectory(apps/astercli)

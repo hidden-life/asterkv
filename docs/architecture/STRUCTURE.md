@@ -21,6 +21,7 @@ apps/asterctl   Administrative control tool.
 ```text
 src/core        Core project-level utilities.
 src/command     Command model and validation.
+src/protocol    Protocol tokenizer/parser foundation.
 ```
 
 The core library currently contains:
@@ -32,6 +33,11 @@ The command library currently contains:
 - command request representation;
 - command name conversion;
 - command argument count validation.
+
+The protocol library currently contains:
+- line-based command tokenizer;
+- command line parser;
+- conversion from protocol text to `CommandRequest`.
 
 ## Planned future modules
 The following modules are planned but not created yet:
