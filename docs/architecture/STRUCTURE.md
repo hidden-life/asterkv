@@ -24,6 +24,7 @@ src/command     Command model and validation.
 src/protocol    Protocol tokenizer/parser foundation.
 src/storage     Storage engine interface and in-memory implementation.
 src/execution   Command dispatching and response model.
+src/protocol    Protocol tokenizer/parser and response serialization.
 ```
 
 The core library currently contains:
@@ -39,7 +40,8 @@ The command library currently contains:
 The protocol library currently contains:
 - line-based command tokenizer;
 - command line parser;
-- conversion from protocol text to `CommandRequest`.
+- conversion from protocol text to `CommandRequest`;
+- serialization of command execution results.
 
 The storage library currently contains:
 - storage engine interface;
