@@ -5,12 +5,11 @@
 #include <asterkv/protocol/parser.h>
 #include <asterkv/storage/in_memory_storage.h>
 #include <asterkv/storage/storage_engine.h>
+#include <asterkv/execution/command_dispatcher.h>
+#include <asterkv/protocol/response_serializer.h>
+#include <asterkv/pipeline/local_pipeline.h>
 
 #include <string>
-
-#include "asterkv/execution/command_dispatcher.h"
-#include "asterkv/protocol/response_serializer.h"
-
 
 int main() {
     auto result = AsterKV::Core::Result<std::string>::success("value");
@@ -48,5 +47,11 @@ int main() {
 
     const std::string serialized = AsterKV::Protocol::serializeExecutionResult(cmdResponse);
 
-    return serialized == "+PONG\r\n" ? 0 : 1;
+    if (serialized != "+PONG\r\n") {
+        return 1;
+    }
+
+    AsterKV::Pipeline::LocalPipeline pipeline{storage};
+
+    return pipeline.processLine("PING") == "+PONG\r\n" ? 0 : 1;
 }

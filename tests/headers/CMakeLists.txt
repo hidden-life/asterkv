@@ -10,6 +10,7 @@ target_link_libraries(asterkv_public_headers_test
         AsterKV::Protocol
         AsterKV::Storage
         AsterKV::Execution
+        AsterKV::Pipeline
 )
 
 asterkvApplyCompilerOptions(asterkv_public_headers_test)

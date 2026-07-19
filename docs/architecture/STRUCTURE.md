@@ -25,6 +25,7 @@ src/protocol    Protocol tokenizer/parser foundation.
 src/storage     Storage engine interface and in-memory implementation.
 src/execution   Command dispatching and response model.
 src/protocol    Protocol tokenizer/parser and response serialization.
+src/pipeline    Local in-process command pipeline.
 ```
 
 The core library currently contains:
@@ -51,6 +52,9 @@ The execution library currently contains:
 - command response representation;
 - command dispatcher;
 - command execution against `StorageEngine`.
+
+The pipeline library currently contains:
+- local in-process command execution pipeline.
 
 ## Planned future modules
 The following modules are planned but not created yet:
