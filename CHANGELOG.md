@@ -42,6 +42,10 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added execution result serialization through `serializeExecutionResult()`.
 - Added response serialization tests without additional external dependencies.
 - Added response serialization architecture documentation and ADR.
+- Added the `AsterKV::Pipeline` module.
+- Added `LocalPipeline` for in-process command execution.
+- Added end-to-end local pipeline tests for `PING`, `SET`, `GET`, `DEL` and `EXISTS`
+- Added local pipeline architecture documentation and ADR.
 
 ### Changed
 - Aligned C++ naming conventions:
