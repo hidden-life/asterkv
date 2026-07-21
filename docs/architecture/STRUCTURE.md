@@ -13,7 +13,7 @@ src/        Source code for internal and public libraries.
 ## Current applications
 ```text
 apps/asterd     Server daemon.
-apps/astercli   User-facing CLI.
+apps/astercli   User-facing CLI with local in-process execution mode.
 apps/asterctl   Administrative control tool.
 ```
 

@@ -46,6 +46,10 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added `LocalPipeline` for in-process command execution.
 - Added end-to-end local pipeline tests for `PING`, `SET`, `GET`, `DEL` and `EXISTS`
 - Added local pipeline architecture documentation and ADR.
+- Added `astercli local` single command execution mode.
+- Added `astercli local` interactive in-memory REPL mode.
+- Added CLI smoke tests for local command execution.
+- Added CLI local mode documentation and ADR.
 
 ### Changed
 - Aligned C++ naming conventions:

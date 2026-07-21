@@ -40,6 +40,31 @@ ctest --preset debug
 ./build/debug/apps/asterctl/asterctl --help
 ```
 
+## Local CLI mode
+Run a single command locally:
+```bash
+./build/debug/apps/astercli/astercli local PING
+./build/debug/apps/astercli/astercli local "SET username alex"
+```
+
+Start an interactive in-memory local session:
+```bash
+./build/debug/apps/astercli/astercli local
+```
+
+Example:
+```text
+> SET username alex
++OK
+> GET username
+$7
+alex
+> quit
+```
+
+Local mode does not use TCP networking and does not persist data between separate
+processes.
+
 ## Development principles
 - C++23.
 - Linux-first.
