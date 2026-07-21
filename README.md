@@ -47,6 +47,26 @@ Run a single command locally:
 ./build/debug/apps/astercli/astercli local "SET username alex"
 ```
 
+## Server local stdin
+Run one command through the server binary without TCP:
+```bash
+./build/debug/apps/asterd/asterd --local PING
+```
+
+Run multiple commands through stdin:
+```bash
+printf 'SET username alex\nGET username\n' | ./build/debug/apps/asterd/asterd --local
+```
+
+Example output:
+```text
++OK
+$7
+alex
+```
+
+Server local mode uses in-memory storage and does not persist data between processes.
+
 Start an interactive in-memory local session:
 ```bash
 ./build/debug/apps/astercli/astercli local
