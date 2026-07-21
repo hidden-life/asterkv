@@ -50,6 +50,10 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added `astercli local` interactive in-memory REPL mode.
 - Added CLI smoke tests for local command execution.
 - Added CLI local mode documentation and ADR.
+- Added `asterd --local` single-command execution mode.
+- Added `asterd --local` stdin-driven local command mode.
+- Added server local mode smoke tests.
+- Added server local stdin mode documentation and ADR.
 
 ### Changed
 - Aligned C++ naming conventions:
