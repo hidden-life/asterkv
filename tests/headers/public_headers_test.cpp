@@ -8,6 +8,8 @@
 #include <asterkv/execution/command_dispatcher.h>
 #include <asterkv/protocol/response_serializer.h>
 #include <asterkv/pipeline/local_pipeline.h>
+#include <asterkv/network/tcp_endpoint.h>
+#include <asterkv/network/tcp_server.h>
 
 #include <string>
 
@@ -53,5 +55,16 @@ int main() {
 
     AsterKV::Pipeline::LocalPipeline pipeline{storage};
 
-    return pipeline.processLine("PING") == "+PONG\r\n" ? 0 : 1;
+    if (pipeline.processLine("PING") != "+PONG\r\n") {
+        return 1;
+    }
+
+    auto endpoint = AsterKV::Network::parseTcpEndpoint("127.0.0.1:7721");
+    if (!endpoint.isOk()) {
+        return 1;
+    }
+
+    AsterKV::Network::TcpLineServer server {endpoint.value(), pipeline};
+
+    return server.endpoint().port == AsterKV::Network::defaultClientPort ? 0 : 1;
 }

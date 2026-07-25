@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string_view>
 
+#include "asterkv/network/tcp_server.h"
 #include "asterkv/pipeline/local_pipeline.h"
 #include "asterkv/storage/in_memory_storage.h"
 
@@ -12,16 +13,19 @@ namespace {
         std::cout
             << "Usage: " << execName << " [--version] [--help]\n"
             << "       " << execName << " --local\n"
-            << "       " << execName << " --local <command>\n\n"
+            << "       " << execName << " --local <command>\n"
+            << "       " << execName << " --listen <host:port>\n\n"
             << "AsterKV server daemon.\n\n"
             << "Options:\n"
-            << "    --version       Print version information.\n"
-            << "    --help          Print this help message.\n"
-            << "    --local         Run local stdin command mode without TCP networking\n\n"
+            << "    --version               Print version information.\n"
+            << "    --help                  Print this help message.\n"
+            << "    --local                 Run local stdin command mode without TCP networking\n"
+            << "    --listen <host:port>    Run blocking TCP line server for one client\n\n"
             << "Examples:\n"
             << "  " << execName << " --local PING\n"
             << "  " << execName << " --local \"SET username alex\"\n"
             << "  printf 'PING'\\n | " << execName << " --local\n"
+            << " " << execName << " --listen 127.0.0.1:" << AsterKV::Network::defaultClientPort << '\n'
         ;
     }
 
@@ -88,6 +92,29 @@ namespace {
 
         return runLocalSingleCommand(argc, argv);
     }
+
+    int runListenMode(std::string_view endpointText) {
+        auto endpoint = AsterKV::Network::parseTcpEndpoint(endpointText);
+
+        if (endpoint.isError()) {
+            std::cerr << "Invalid listen address: " << endpoint.status().message() << '\n';
+            return EXIT_FAILURE;
+        }
+
+        AsterKV::Storage::InMemoryStorage storage;
+        AsterKV::Pipeline::LocalPipeline pipeline {storage};
+        AsterKV::Network::TcpLineServer server {endpoint.value(), pipeline};
+
+        std::cout << "AsterKV listening on " << AsterKV::Network::tcpEndpointToString(server.endpoint()) << " for one client\n";
+        AsterKV::Core::Status status = server.runOnce();
+
+        if (!status.isOk()) {
+            std::cerr << "TCP server failed: " << status.codeString() << ' ' << status.message() << '\n';
+            return EXIT_FAILURE;
+        }
+
+        return EXIT_SUCCESS;
+    }
 }
 
 int main(const int argc, char **argv) {
@@ -115,6 +142,15 @@ int main(const int argc, char **argv) {
 
     if (argument == "--local") {
         return runLocalMode(argc, argv);
+    }
+
+    if (argument == "--listen") {
+        if (argc != 3) {
+            std::cerr << "--listen requires <host:port>\n";
+            return EXIT_FAILURE;
+        }
+
+        return runListenMode(argv[2]);
     }
 
     std::cerr << "Unknown argument: " << argument << std::endl;

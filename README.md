@@ -61,7 +61,7 @@ printf 'SET username alex\nGET username\n' | ./build/debug/apps/asterd/asterd --
 Example output:
 ```text
 +OK
-$7
+$4
 alex
 ```
 
@@ -77,13 +77,43 @@ Example:
 > SET username alex
 +OK
 > GET username
-$7
+$4
 alex
 > quit
 ```
 
 Local mode does not use TCP networking and does not persist data between separate
 processes.
+
+## TCP server foundation
+Start the TCP server:
+```bash
+./build/debug/apps/asterd/asterd --listen 127.0.0.1:7721
+```
+
+Send a command from another terminal:
+```bash
+printf 'PING\n' | nc 127.0.0.1 7721
+```
+
+Expected response:
+```text
++PONG
+```
+
+Send multiple commands over one connection:
+```bash
+printf 'SET username alex\nGET username\n' | nc 127.0.0.1 7721
+```
+
+Expected response:
+```text
++OK
+$4
+alex
+```
+
+The current TCP server accepts one client and exits when that client disconnects.
 
 ## Development principles
 - C++23.

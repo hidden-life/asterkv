@@ -54,6 +54,12 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added `asterd --local` stdin-driven local command mode.
 - Added server local mode smoke tests.
 - Added server local stdin mode documentation and ADR.
+- Added the `AsterKV::Netwrok` module.
+- Added TCP endpoint parsing for `host:port` listen addresses.
+- Added blocking single-client TCP line server foundation.
+- Added `asterd --listen <host:port>` TCP listen mode.
+- Added network endpoint tests without additional external dependencies.
+- Added TCP server foundation architecture documentation and ADR.
 
 ### Changed
 - Aligned C++ naming conventions:
