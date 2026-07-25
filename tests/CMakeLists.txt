@@ -4,6 +4,7 @@ add_subdirectory(protocol)
 add_subdirectory(storage)
 add_subdirectory(execution)
 add_subdirectory(pipeline)
+add_subdirectory(network)
 
 if (ASTERKV_BUILD_UNIT_TESTS)
     find_package(GTest CONFIG QUIET)

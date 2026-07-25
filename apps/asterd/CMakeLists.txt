@@ -7,6 +7,7 @@ target_link_libraries(asterd
         AsterKV::Core
         AsterKV::Pipeline
         AsterKV::Storage
+        AsterKV::Network
 )
 
 asterkvApplyCompilerOptions(asterd)
@@ -45,5 +46,15 @@ if (BUILD_TESTING)
     set_tests_properties(asterd_local_stdin_pipeline
             PROPERTIES
                 PASS_REGULAR_EXPRESSION "alex"
+    )
+
+    add_test(
+            NAME asterd_rejects_invalid_listen_address
+            COMMAND /bin/sh -c "\"$<TARGET_FILE:asterd>\" --listen invalid 2>&1; test $? -ne 0"
+    )
+
+    set_tests_properties(asterd_rejects_invalid_listen_address
+            PROPERTIES
+                PASS_REGULAR_EXPRESSION "Invalid listen address"
     )
 endif ()
