@@ -13,7 +13,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 include(CTest)
 
-option(ASTERKV_BUILD_UNIT_TESTS "Build AsterKV unit tests" ${BUILD_TESTING})
+option(ASTERKV_BUILD_UNIT_TESTS "Build AsterKV GoogleTest-based unit tests" ${BUILD_TESTING})
+option(ASTERKV_BUILD_INTEGRATION_TESTS "Build AsterKV integration tests" ${BUILD_TESTING})
 option(ASTERKV_REQUIRE_TEST_DEPENDENCIES "Fail configuration when test dependencies are missing" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
