@@ -39,6 +39,17 @@ Examples:
 - successful read operations return `Result<std::string>`;
 - successful existence checks return `Result<bool>`.
 
+## Thread safety
+`InMemoryStorage` is protected by a mutex.
+
+All public storage operations lock the storage before accessing the underlying map.
+
+This makes the current in-memory runtime safe for concurrent TCP client worker threads.
+
+The current synchronization model is simple and coarse-grained.
+
+Future storage engines may use more advanced concurrency control.
+
 ## Non-goals
 The current storage module does not implement:
 - WAL;

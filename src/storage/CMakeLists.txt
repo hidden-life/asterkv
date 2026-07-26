@@ -12,6 +12,8 @@ file(
         "${PROJECT_SOURCE_DIR}/include/asterkv/storage/*.h"
 )
 
+find_package(Threads REQUIRED)
+
 add_library(asterkv_storage STATIC)
 
 add_library(AsterKV::Storage ALIAS asterkv_storage)
@@ -37,6 +39,8 @@ target_include_directories(asterkv_storage
 target_link_libraries(asterkv_storage
         PUBLIC
         AsterKV::Core
+
+        Threads::Threads
 )
 
 asterkvApplyCompilerOptions(asterkv_storage)

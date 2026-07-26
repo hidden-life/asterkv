@@ -13,7 +13,8 @@ The integration test verifies:
 - `EXISTS`;
 - `DEL`;
 - missing-key error response;
-- graceful shutdown through `SIGTERM`.
+- graceful shutdown through `SIGTERM`;
+- concurrent client handling while another client remains connected.
 
 ## Netcat behavior
 The project currently uses:
@@ -25,6 +26,16 @@ This asks netcat to close the connection shortly after stdin reaches EOF.
 
 This is important because the current server serves one connected client until
 that client disconnects.
+
+## Concurrent client check
+The smoke test starts one long-lived TCP client and keeps its connection open
+briefly.
+
+While that client is still connected, the test sends `PING` from another client.
+
+The second client must received `+PONG`.
+
+This verifies that the server is no longer sequential at the client-serving level.
 
 ## Test dependencies
 The TCP integration smoke test requires:

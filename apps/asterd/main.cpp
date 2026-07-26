@@ -113,7 +113,7 @@ namespace {
         AsterKV::Server::TcpServerRuntime runtime {std::move(options)};
 
         std::cout << "AsterKV listening on " << AsterKV::Network::tcpEndpointToString(runtime.endpoint()) << '\n'
-            << "Press Ctrl+C to stop.\n";
+            << "Press Ctrl+C to stop.\n" << std::flush;
 
         AsterKV::Core::Status status = runtime.run();
         if (!status.isOk()) {
@@ -122,7 +122,7 @@ namespace {
             return EXIT_FAILURE;
         }
 
-        std::cout << "AsterKV server stopped.\n";
+        std::cout << "AsterKV server stopped.\n" << std::flush;
 
         return EXIT_SUCCESS;
     }

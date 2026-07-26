@@ -12,7 +12,7 @@ namespace AsterKV::Pipeline {
     public:
         explicit LocalPipeline(Storage::StorageEngine &storage);
 
-        [[nodiscard]] std::string processLine(std::string_view line);
+        [[nodiscard]] std::string processLine(std::string_view line) const;
 
     private:
         Execution::CommandDispatcher dispatcher_;

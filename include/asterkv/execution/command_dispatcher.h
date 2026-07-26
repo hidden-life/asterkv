@@ -9,7 +9,7 @@ namespace AsterKV::Execution {
     class CommandDispatcher final {
     public:
         explicit CommandDispatcher(Storage::StorageEngine &storage);
-        [[nodiscard]] Core::Result<CommandResponse> dispatch(const Command::CommandRequest &request);
+        [[nodiscard]] Core::Result<CommandResponse> dispatch(const Command::CommandRequest &request) const;
 
     private:
         Storage::StorageEngine &storage_;

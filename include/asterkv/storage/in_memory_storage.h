@@ -2,6 +2,7 @@
 #define ASTERKV_STORAGE_IN_MEMORY_STORAGE_H
 
 #include <unordered_map>
+#include <mutex>
 #include <asterkv/storage/storage_engine.h>
 
 namespace AsterKV::Storage {
@@ -17,6 +18,7 @@ namespace AsterKV::Storage {
 
     private:
         std::unordered_map<std::string, std::string> values_;
+        mutable std::mutex mutex_;
     };
 }
 
