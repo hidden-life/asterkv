@@ -47,6 +47,20 @@ The `-q 1` flag asks netcat to close the connection shortly after stdin reaches 
 Without this behavior, the server may keep serving the first client and will not accept
 the next one yet because the current server is sequential.
 
+## Runtime boundary
+`TcpLineServer` does not install process signal handlers directly.
+
+It receives a stop callback from server runtime.
+
+This keeps the network module independent from process-level signal policy.
+
+The current `asterd --listen` path uses:
+```text
+SignalShutdownController
+    -> TcpServerRuntime
+    -> TcpLineServer::run(stopRequested)
+```
+
 ## Current limitations
 The current TCP server does not provide:
 - concurrent clients;

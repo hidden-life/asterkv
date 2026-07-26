@@ -8,6 +8,7 @@ target_link_libraries(asterd
         AsterKV::Pipeline
         AsterKV::Storage
         AsterKV::Network
+        AsterKV::Server
 )
 
 asterkvApplyCompilerOptions(asterd)

@@ -27,6 +27,7 @@ src/execution   Command dispatching and response model.
 src/protocol    Protocol tokenizer/parser and response serialization.
 src/pipeline    Local in-process command pipeline.
 src/network     TCP endpoint parsing and blocking sequential TCP server.
+src/server      Server runtime options, shutdown handling, and runtime wiring.
 ```
 
 The core library currently contains:
@@ -63,6 +64,11 @@ The network library currently contains:
 - sequential accept loop;
 - graceful shutdown integration points.
 
+The server library currently contains:
+- TCP server runtime options;
+- signal-based shutdown controller;
+- default TCP server runtime wiring.
+
 ## Tests
 ```text
 tests/headers           Public headers compile tests.
@@ -73,6 +79,7 @@ tests/execution         Command dispatcher tests.
 tests/pipeline          Local pipeline tests.
 tests/network           Network unit-style tests.
 tests/integration       Process-level integration smoke tests.
+tests/server            Server runtime boundary tests.
 ```
 
 ## Planned future modules

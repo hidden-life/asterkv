@@ -71,6 +71,12 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added TCP smoke test coverage for shared in-memory state across multiple clients.
 - Added TCP graceful shutdown smoke test through `SIGTERM`.
 - Added TCP integration smoke test documentation and ADR.
+- Added the `AsterKV::Server` module.
+- Added `TcpServerOptions` for server runtime configuration.
+- Added `SignalShutdownController` for SIGINT/SIGTERM shutdown state.
+- Added `TcpServerRuntime` for writing in-memory storage, local pipeline, and TCP serving.
+- Added server runtime boundary tests.
+- Added server runtime architecture documentation and ADR.
 
 ### Changed
 - Aligned C++ naming conventions:
@@ -80,6 +86,9 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
   - headers use `.h`.
 - Changed `asterd --listen` from one-client execution to a long-running sequential server loop.
 - Updated manual TCP testing examples to use `nc -q 1`.
+- Moved `asterd --listen` signal handling from `apps/asterd` into the server runtime layer.
+- Simplified `apps/asterd/main.cpp` by delegating TCP server lifecycle to `TcpServerRuntime`.
+- Cleaned up `TcpLineServer::runOnce()` file descriptor lifetime handling.
 
 ### Fixed
 
