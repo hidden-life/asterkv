@@ -93,7 +93,7 @@ Start the TCP server:
 
 Send a command from another terminal:
 ```bash
-printf 'PING\n' | nc 127.0.0.1 7721
+printf 'PING\n' | nc -q 1 127.0.0.1 7721
 ```
 
 Expected response:
@@ -103,7 +103,7 @@ Expected response:
 
 Send multiple commands over one connection:
 ```bash
-printf 'SET username alex\nGET username\n' | nc 127.0.0.1 7721
+printf 'SET username alex\nGET username\n' | nc -q 1 127.0.0.1 7721
 ```
 
 Expected response:
@@ -125,6 +125,10 @@ The server prints:
 ```text
 AsterKV server stopped.
 ```
+
+The examples use `nc -q 1` so netcat closes the client connection after stdin reaches EOF.
+This matters because the current TCP server is sequential and serves one connected
+client at a time.
 
 ## Development principles
 - C++23.

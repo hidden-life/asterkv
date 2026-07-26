@@ -63,6 +63,18 @@ The network library currently contains:
 - sequential accept loop;
 - graceful shutdown integration points.
 
+## Tests
+```text
+tests/headers           Public headers compile tests.
+tests/command           Command model tests.
+tests/protocol          Protocol parser and response serializer tests.
+tests/storage           Storage tests.
+tests/execution         Command dispatcher tests.
+tests/pipeline          Local pipeline tests.
+tests/network           Network unit-style tests.
+tests/integration       Process-level integration smoke tests.
+```
+
 ## Planned future modules
 The following modules are planned but not created yet:
 ```text

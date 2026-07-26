@@ -12,13 +12,16 @@ asterd --listen 127.0.0.1:7721
 
 Send a command:
 ```bash
-printf 'PING\n' | nc 127.0.0.1 7721
+printf 'PING\n' | nc -q 1 127.0.0.1 7721
 ```
 
 Expected response:
 ```text
 +PONG
 ```
+
+Use `nc -q 1` for one-shot manual commands so the client closes the connection after stdin
+reaches EOF.
 
 ## Current behavior
 The TCP server currently:

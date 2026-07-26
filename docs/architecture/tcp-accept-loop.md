@@ -36,6 +36,17 @@ are introduced.
 When a shutdown signal received, the server exits the accept or receive loop and
 returns successfully.
 
+## Manual testing
+Use `nc -q 1` when testing one-shot commands:
+```bash
+printf 'PING\n' | nc -q 1 127.0.0.1 7721
+```
+
+The `-q 1` flag asks netcat to close the connection shortly after stdin reaches EOF.
+
+Without this behavior, the server may keep serving the first client and will not accept
+the next one yet because the current server is sequential.
+
 ## Current limitations
 The current TCP server does not provide:
 - concurrent clients;

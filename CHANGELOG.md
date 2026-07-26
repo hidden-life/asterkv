@@ -65,6 +65,12 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added server-side stop callback support to `TcpLineServer`.
 - Added missing-listen-address smoke test for `asterd --listen`.
 - Added TCP accept loop architecture documentation and ADR.
+- Added optional integration test registration through `ASTERKV_BUILD_INTEGRATION_TESTS`.
+- Added TCP server integration smoke test for `asterd --listen`.
+- Added process-level TCP checks for `PING`, `SET`, `GET`, `EXISTS`, and `DEL`.
+- Added TCP smoke test coverage for shared in-memory state across multiple clients.
+- Added TCP graceful shutdown smoke test through `SIGTERM`.
+- Added TCP integration smoke test documentation and ADR.
 
 ### Changed
 - Aligned C++ naming conventions:
@@ -73,6 +79,7 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
   - variables use lowerCamelCase;
   - headers use `.h`.
 - Changed `asterd --listen` from one-client execution to a long-running sequential server loop.
+- Updated manual TCP testing examples to use `nc -q 1`.
 
 ### Fixed
 
