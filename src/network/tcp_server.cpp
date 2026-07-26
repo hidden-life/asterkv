@@ -270,7 +270,9 @@ namespace AsterKV::Network {
             return serverFd.status();
         }
 
-        return acceptAndServeOneClient(std::move(serverFd).value().get(), pipeline_, nullptr);
+        UniqueFd listeningSocket = std::move(serverFd).value();
+
+        return acceptAndServeOneClient(listeningSocket.get(), pipeline_, nullptr);
     }
 
     Core::Status TcpLineServer::run(StopRequestedCallback stopRequested) {

@@ -5,6 +5,7 @@ add_subdirectory(storage)
 add_subdirectory(execution)
 add_subdirectory(pipeline)
 add_subdirectory(network)
+add_subdirectory(server)
 
 if (ASTERKV_BUILD_INTEGRATION_TESTS)
     add_subdirectory(integration)

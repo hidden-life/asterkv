@@ -10,6 +10,9 @@
 #include <asterkv/pipeline/local_pipeline.h>
 #include <asterkv/network/tcp_endpoint.h>
 #include <asterkv/network/tcp_server.h>
+#include <asterkv/server/signal_shutdown_controller.h>
+#include <asterkv/server/tcp_server_options.h>
+#include <asterkv/server/tcp_server_runtime.h>
 
 #include <string>
 
@@ -65,6 +68,21 @@ int main() {
     }
 
     AsterKV::Network::TcpLineServer server {endpoint.value(), pipeline};
+    if (server.endpoint().port != AsterKV::Network::defaultClientPort) {
+        return 1;
+    }
 
-    return server.endpoint().port == AsterKV::Network::defaultClientPort ? 0 : 1;
+    const AsterKV::Server::TcpServerOptions options = AsterKV::Server::defaultServerOptions();
+    if (options.endpoint.port != AsterKV::Network::defaultClientPort) {
+        return 1;
+    }
+
+    AsterKV::Server::SignalShutdownController::reset();
+    if (AsterKV::Server::SignalShutdownController::stopRequested()) {
+        return 1;
+    }
+
+    AsterKV::Server::TcpServerRuntime runtime {options};
+
+    return runtime.endpoint().port == AsterKV::Network::defaultClientPort ? 0 : 1;
 }

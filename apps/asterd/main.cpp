@@ -10,46 +10,10 @@
 #include <asterkv/storage/in_memory_storage.h>
 #include <asterkv/core/version.h>
 
+#include "asterkv/server/tcp_server_options.h"
+#include "asterkv/server/tcp_server_runtime.h"
+
 namespace {
-    volatile std::sig_atomic_t stopRequested = 0;
-
-    void handleStopSignal(int /* signalNumber */) {
-        stopRequested = 1;
-    }
-
-    [[nodiscard]] bool isStopRequested() noexcept {
-        return stopRequested != 0;
-    }
-
-    [[nodiscard]] AsterKV::Core::Status installStopSignalHandlers() {
-        struct sigaction action {};
-        action.sa_handler = handleStopSignal;
-        action.sa_flags = 0;
-
-        if (::sigemptyset(&action.sa_mask) != 0) {
-            std::string message = "failed to initialize signal mask: ";
-            message.append(std::strerror(errno));
-
-            return AsterKV::Core::Status::unavailable(message);
-        }
-
-        if (::sigaction(SIGINT, &action, nullptr) != 0) {
-            std::string message = "failed to install SIGINT handler: ";
-            message.append(std::strerror(errno));
-
-            return AsterKV::Core::Status::unavailable(message);
-        }
-
-        if (::sigaction(SIGTERM, &action, nullptr) != 0) {
-            std::string message = "failed to install SIGTERM handler: ";
-            message.append(std::strerror(errno));
-
-            return AsterKV::Core::Status::unavailable(message);
-        }
-
-        return AsterKV::Core::Status::ok();
-    }
-
     void printUsage(std::string_view execName) {
         std::cout
             << "Usage: " << execName << " [--version] [--help]\n"
@@ -142,25 +106,19 @@ namespace {
             return EXIT_FAILURE;
         }
 
-        AsterKV::Core::Status signalStatus = installStopSignalHandlers();
-        if (!signalStatus.isOk()) {
-            std::cerr << "Failed to initialize graceful shutdown: " << signalStatus.message() << '\n';
+        AsterKV::Server::TcpServerOptions options {
+            .endpoint = endpoint.value(),
+        };
 
-            return EXIT_FAILURE;
-        }
+        AsterKV::Server::TcpServerRuntime runtime {std::move(options)};
 
-        AsterKV::Storage::InMemoryStorage storage;
-        AsterKV::Pipeline::LocalPipeline pipeline {storage};
-        AsterKV::Network::TcpLineServer server {endpoint.value(), pipeline};
+        std::cout << "AsterKV listening on " << AsterKV::Network::tcpEndpointToString(runtime.endpoint()) << '\n'
+            << "Press Ctrl+C to stop.\n";
 
-        std::cout << "AsterKV listening on "
-                << AsterKV::Network::tcpEndpointToString(server.endpoint())
-                << '\n'
-                << "Press Ctrl+C to stop.\n";
-        AsterKV::Core::Status status = server.run(isStopRequested);
-
+        AsterKV::Core::Status status = runtime.run();
         if (!status.isOk()) {
             std::cerr << "TCP server failed: " << status.codeString() << ' ' << status.message() << '\n';
+
             return EXIT_FAILURE;
         }
 
