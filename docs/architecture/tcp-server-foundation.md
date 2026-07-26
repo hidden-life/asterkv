@@ -21,14 +21,16 @@ Expected response:
 ```
 
 ## Current behavior
-The initial TCP server:
+The TCP server currently:
 - binds to an IPv4 host and port;
-- listens for one client;
-- accepts one client connection;
+- listens for client connections;
+- accepts clients in a blocking loop;
+- serves one client at a time;
 - reads newline-delimited commands;
 - processes commands through `LocalPipeline`;
 - writes serialized protocol responses;
-- exits after the client disconnects.
+- continue accepting clients after a client disconnects;
+- keeps running until SIGINT or SIGTERM is received.
 
 ## Current protocol
 Commands are line-based:

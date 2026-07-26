@@ -57,4 +57,14 @@ if (BUILD_TESTING)
             PROPERTIES
                 PASS_REGULAR_EXPRESSION "Invalid listen address"
     )
+
+    add_test(
+            NAME asterd_rejects_missing_listen_address
+            COMMAND /bin/sh -c "\"$<TARGET_FILE:asterd>\" --listen 2>&1; test $? -ne 0"
+    )
+
+    set_tests_properties(asterd_rejects_missing_listen_address
+            PROPERTIES
+                PASS_REGULAR_EXPRESSION "--listen requires"
+    )
 endif ()
