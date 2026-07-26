@@ -6,7 +6,7 @@ namespace AsterKV::Pipeline {
     LocalPipeline::LocalPipeline(Storage::StorageEngine &storage) : dispatcher_(storage) {
     }
 
-    std::string LocalPipeline::processLine(std::string_view line) {
+    std::string LocalPipeline::processLine(std::string_view line) const {
         auto commandRequest = Protocol::parseCommandLine(line);
         if (commandRequest.isError()) {
             return Protocol::serializeStatus(commandRequest.status());

@@ -66,7 +66,7 @@ namespace AsterKV::Execution {
     CommandDispatcher::CommandDispatcher(Storage::StorageEngine &storage) : storage_(storage) {
     }
 
-    Core::Result<CommandResponse> CommandDispatcher::dispatch(const Command::CommandRequest &request) {
+    Core::Result<CommandResponse> CommandDispatcher::dispatch(const Command::CommandRequest &request) const {
         Core::Status validationStatus = Command::validateCommandRequest(request);
         if (!validationStatus.isOk()) {
             return Core::Result<CommandResponse>::failure(std::move(validationStatus));

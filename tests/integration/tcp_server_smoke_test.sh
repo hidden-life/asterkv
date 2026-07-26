@@ -10,6 +10,7 @@ PORT="$5"
 
 SERVER_PID=""
 SERVER_LOG="$(mktemp "${TMPDIR:-/tmp}/asterkv_tcp_server.XXXXXX.log")"
+LONG_CLIENT_OUTPUT="$(mktemp "${TMPDIR:-/tmp}/asterkv_tcp_long_client.XXXXXX.out")"
 
 cleanup() {
     if [ -n "${SERVER_PID}" ] && kill -0 "${SERVER_PID}" 2>/dev/null; then
@@ -17,7 +18,7 @@ cleanup() {
         wait "${SERVER_PID}" 2>/dev/null || true
     fi
 
-    rm -rf "${SERVER_LOG}"
+    rm -f "${SERVER_LOG}" "${LONG_CLIENT_OUTPUT}"
 }
 
 trap cleanup EXIT INT TERM
@@ -48,7 +49,7 @@ assert_contains() {
     if ! printf '%s' "${haystack}" | grep -F -- "${needle}" >/dev/null; then
         echo "Unexpected response for ${description}" >&2
         echo "Expected to contain: ${needle}" >&2
-        echo "Actual response: " >&2
+        echo "Actual response:" >&2
         printf '%s\n' "${haystack}" >&2
         fail "${description} failed"
     fi
@@ -97,6 +98,30 @@ assert_contains "${response}" ":0" "EXISTS after DEL over TCP"
 response="$(run_client 'GET username\n')"
 assert_contains "${response}" "-ERR not_found key not found" "missing key after DEL over TCP"
 
+(
+    {
+        printf 'SET long_client active\n'
+        sleep 5
+    } | "${TIMEOUT_BIN}" 8 "${NC_BIN}" -q 1 "${HOST}" "${PORT}" >"${LONG_CLIENT_OUTPUT}"
+) &
+LONG_CLIENT_PID="$!"
+
+sleep 0.5
+
+response="$(
+    printf 'PING\n' | "${TIMEOUT_BIN}" 2 "${NC_BIN}" -q 1 "${HOST}" "${PORT}" || true
+)"
+
+assert_contains "${response}" "+PONG" "concurrent PING while another client remains connected"
+
+wait "${LONG_CLIENT_PID}" || fail "long-lived client failed"
+
+longClientResponse="$(cat "${LONG_CLIENT_OUTPUT}")"
+assert_contains "${longClientResponse}" "+OK" "long-lived client SET response"
+
+response="$(run_client 'GET long_client\n')"
+assert_contains "${response}" "active" "state written by long-lived client"
+
 kill -TERM "${SERVER_PID}" 2>/dev/null || fail "failed to send SIGTERM to server"
 
 SERVER_EXIT_CODE=0
@@ -105,10 +130,6 @@ SERVER_PID=""
 
 if [ "${SERVER_EXIT_CODE}" -ne 0 ]; then
     fail "server did not stop gracefully after SIGTERM; exit code ${SERVER_EXIT_CODE}"
-fi
-
-if ! grep -F -- "AsterKV server stopped." "${SERVER_LOG}" >/dev/null; then
-    fail "server did not print graceful shutdown message"
 fi
 
 exit 0

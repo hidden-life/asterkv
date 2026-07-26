@@ -26,7 +26,7 @@ src/storage     Storage engine interface and in-memory implementation.
 src/execution   Command dispatching and response model.
 src/protocol    Protocol tokenizer/parser and response serialization.
 src/pipeline    Local in-process command pipeline.
-src/network     TCP endpoint parsing and blocking sequential TCP server.
+src/network     TCP endpoint parsing and thread-per-client TCP server.
 src/server      Server runtime options, shutdown handling, and runtime wiring.
 ```
 
@@ -48,7 +48,9 @@ The protocol library currently contains:
 
 The storage library currently contains:
 - storage engine interface;
-- in-memory key-value implementation.
+- in-memory key-value implementation;
+
+The in-memory storage implementation is mutex-protected for concurrent TCP client workers.
 
 The execution library currently contains:
 - command response representation;
@@ -60,8 +62,8 @@ The pipeline library currently contains:
 
 The network library currently contains:
 - TCP endpoint representation and parsing;
-- blocking line-based TCP server;
-- sequential accept loop;
+- blocking TCP accept loop;
+- thread-per-client TCP serving;
 - graceful shutdown integration points.
 
 The server library currently contains:

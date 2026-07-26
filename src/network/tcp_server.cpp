@@ -4,6 +4,7 @@
 #include <utility>
 #include <cstring>
 #include <array>
+#include <thread>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
@@ -62,12 +63,68 @@ namespace AsterKV::Network {
             return stopRequested != nullptr && stopRequested();
         }
 
+        enum class AcceptClientResultType {
+            Accepted,
+            Stopped,
+            Failed,
+        };
+
+        struct AcceptClientResult final {
+            AcceptClientResultType type;
+            UniqueFd clientFd;
+            Core::Status status;
+
+            [[nodiscard]] static AcceptClientResult accepted(UniqueFd clientFd) {
+                return AcceptClientResult {
+                    .type = AcceptClientResultType::Accepted,
+                    .clientFd = std::move(clientFd),
+                    .status = Core::Status::ok(),
+                };
+            }
+
+            [[nodiscard]] static AcceptClientResult stopped() {
+                return AcceptClientResult {
+                    .type = AcceptClientResultType::Stopped,
+                    .clientFd = UniqueFd {1},
+                    .status = Core::Status::ok(),
+                };
+            }
+
+            [[nodiscard]] static AcceptClientResult failed(Core::Status status) {
+                return AcceptClientResult {
+                    .type = AcceptClientResultType::Failed,
+                    .clientFd = UniqueFd {1},
+                    .status = std::move(status),
+                };
+            }
+        };
+
         [[nodiscard]] Core::Status systemUnavailableError(std::string_view context) {
             std::string message {context};
             message.append(": ");
             message.append(std::strerror(errno));
 
             return Core::Status::unavailable(std::move(message));
+        }
+
+        [[nodiscard]] Core::Status configureClientSocket(int clientFd) {
+            timeval timeout {};
+            timeout.tv_sec = 1;
+            timeout.tv_usec = 0;
+
+            if (::setsockopt(clientFd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
+                return systemUnavailableError("failed to configure client receive timeout");
+            }
+
+            if (::setsockopt(clientFd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout)) < 0) {
+                return systemUnavailableError("failed to configure client send timeout");
+            }
+
+            return Core::Status::ok();
+        }
+
+        [[nodiscard]] bool isTemporarySocketWaitError() noexcept {
+            return errno == EAGAIN || errno == EWOULDBLOCK;
         }
 
         [[nodiscard]] Core::Status sendAll(int clientFd, std::string_view bytes, TcpLineServer::StopRequestedCallback stopRequested) {
@@ -82,7 +139,7 @@ namespace AsterKV::Network {
                 );
 
                 if (sentCount < 0) {
-                    if (errno == EINTR) {
+                    if (errno == EINTR || isTemporarySocketWaitError()) {
                         if (isStopRequested(stopRequested)) {
                             return Core::Status::ok();
                         }
@@ -152,7 +209,7 @@ namespace AsterKV::Network {
             while (!isStopRequested(stopRequested)) {
                 const ssize_t readCount = ::recv(clientFd, buffer.data(), buffer.size(), 0);
                 if (readCount < 0) {
-                    if (errno == EINTR) {
+                    if (errno == EINTR || isTemporarySocketWaitError()) {
                         if (isStopRequested(stopRequested)) {
                             return Core::Status::ok();
                         }
@@ -175,7 +232,7 @@ namespace AsterKV::Network {
                 }
             }
 
-            if (!pendingInput.empty()) {
+            if (!pendingInput.empty() && !isStopRequested(stopRequested)) {
                 return processLineAndSendResponse(clientFd, pipeline, pendingInput, stopRequested);
             }
 
@@ -229,30 +286,55 @@ namespace AsterKV::Network {
             return Core::Result<UniqueFd>::success(std::move(serverFd));
         }
 
-        [[nodiscard]] Core::Status acceptAndServeOneClient(int serverFd, Pipeline::LocalPipeline &pipeline, TcpLineServer::StopRequestedCallback stopRequested) {
+        [[nodiscard]] AcceptClientResult acceptClient(int serverFd, TcpLineServer::StopRequestedCallback stopRequested) {
             while (!isStopRequested(stopRequested)) {
                 sockaddr_in clientAddr {};
                 socklen_t clientAddrLen = sizeof(clientAddr);
-
                 const int rawClientFd = ::accept(serverFd, reinterpret_cast<sockaddr*>(&clientAddr), &clientAddrLen);
                 if (rawClientFd < 0) {
                     if (errno == EINTR) {
                         if (isStopRequested(stopRequested)) {
-                            return Core::Status::ok();
+                            return AcceptClientResult::stopped();
                         }
 
                         continue;
                     }
 
-                    return systemUnavailableError("failed to accept client connection");
+                    return AcceptClientResult::failed(systemUnavailableError("failed to accept client connection"));
                 }
 
                 UniqueFd clientFd {rawClientFd};
+                Core::Status configureStatus = configureClientSocket(clientFd.get());
 
-                return serveClient(clientFd.get(), pipeline, stopRequested);
+                if (!configureStatus.isOk()) {
+                    return AcceptClientResult::failed(std::move(configureStatus));
+                }
+
+                return AcceptClientResult::accepted(std::move(clientFd));
             }
 
-            return Core::Status::ok();
+            return AcceptClientResult::stopped();
+        }
+
+        [[nodiscard]] Core::Status acceptAndServeOneClient(int serverFd, Pipeline::LocalPipeline &pipeline, TcpLineServer::StopRequestedCallback stopRequested) {
+            AcceptClientResult clientResult = acceptClient(serverFd, stopRequested);
+            if (clientResult.type == AcceptClientResultType::Stopped) {
+                    return Core::Status::ok();
+            }
+
+            if (clientResult.type == AcceptClientResultType::Accepted) {
+                return clientResult.status;
+            }
+
+            return serveClient(clientResult.clientFd.get(), pipeline, stopRequested);
+        }
+
+        void joinClientWorkers(std::vector<std::thread> &workers) {
+            for (std::thread &worker : workers) {
+                if (worker.joinable()) {
+                    worker.join();
+                }
+            }
         }
     }
 
@@ -283,12 +365,28 @@ namespace AsterKV::Network {
         }
 
         UniqueFd listeningSocket = std::move(serverFd).value();
+        std::vector<std::thread> workers;
+
         while (!isStopRequested(stopRequested)) {
-            Core::Status status = acceptAndServeOneClient(listeningSocket.get(), pipeline_, stopRequested);
-            if (!status.isOk()) {
-                return status;
+            AcceptClientResult clientResult = acceptClient(listeningSocket.get(), stopRequested);
+            if (clientResult.type == AcceptClientResultType::Stopped) {
+                break;
             }
+
+            if (clientResult.type == AcceptClientResultType::Failed) {
+                joinClientWorkers(workers);
+
+                return clientResult.status;
+            }
+
+            workers.emplace_back(
+                [clientFd = std::move(clientResult.clientFd), &pipeline = pipeline_, stopRequested] () mutable {
+                    static_cast<void>(serveClient(clientFd.get(), pipeline, stopRequested));
+                }
+            );
         }
+
+        joinClientWorkers(workers);
 
         return Core::Status::ok();
     }

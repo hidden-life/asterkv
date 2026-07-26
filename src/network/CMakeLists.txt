@@ -12,6 +12,8 @@ file(
         "${PROJECT_SOURCE_DIR}/include/asterkv/network/*.h"
 )
 
+find_package(Threads REQUIRED)
+
 add_library(asterkv_network STATIC)
 
 add_library(AsterKV::Network ALIAS asterkv_network)
@@ -38,6 +40,8 @@ target_link_libraries(asterkv_network
         PUBLIC
             AsterKV::Core
             AsterKV::Pipeline
+
+            Threads::Threads
 )
 
 asterkvApplyCompilerOptions(asterkv_network)

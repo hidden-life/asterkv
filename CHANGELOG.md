@@ -77,6 +77,12 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added `TcpServerRuntime` for writing in-memory storage, local pipeline, and TCP serving.
 - Added server runtime boundary tests.
 - Added server runtime architecture documentation and ADR.
+- Added thread-per-client TCP serving in `TcpLineServer::run()`.
+- Added client socket receive/send timeouts for shutdown-aware worker threads.
+- Added concurrent TCP client coverage to the integration smoke test.
+- Added mutex protection to `InMemoryStorage`.
+- Added storage concurrency test coverage.
+- Added TCP client worker thread architecture documentation and ADR.
 
 ### Changed
 - Aligned C++ naming conventions:
@@ -89,6 +95,9 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Moved `asterd --listen` signal handling from `apps/asterd` into the server runtime layer.
 - Simplified `apps/asterd/main.cpp` by delegating TCP server lifecycle to `TcpServerRuntime`.
 - Cleaned up `TcpLineServer::runOnce()` file descriptor lifetime handling.
+- Changed `asterd --listen` from sequential client serving to thread-per-client serving.
+- Changed `LocalPipeline::processLine()` to be const.
+- Changed `CommandDispatcher::dispatch()` to be const.
 
 ### Fixed
 

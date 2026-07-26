@@ -14,6 +14,8 @@ namespace AsterKV::Storage {
             return Core::Status::invalidArgument("key must not be empty");
         }
 
+        std::lock_guard lock {mutex_};
+
         values_[std::move(key)] = std::move(value);
 
         return Core::Status::ok();
@@ -25,6 +27,8 @@ namespace AsterKV::Storage {
                 Core::Status::invalidArgument("key must not be empty")
             );
         }
+
+        std::lock_guard lock {mutex_};
 
         const auto it = values_.find(std::string { key });
         if (it == values_.end()) {
@@ -41,6 +45,8 @@ namespace AsterKV::Storage {
             return Core::Status::invalidArgument("key must not be empty");
         }
 
+        std::lock_guard lock {mutex_};
+
         const auto erasedCount = values_.erase(std::string { key });
         if (erasedCount == 0) {
             return Core::Status::notFound("key not found");
@@ -54,14 +60,20 @@ namespace AsterKV::Storage {
             return Core::Result<bool>::failure(Core::Status::invalidArgument("key must not be empty"));
         }
 
+        std::lock_guard lock {mutex_};
+
         return Core::Result<bool>::success(values_.contains(std::string { key }));
     }
 
     std::size_t InMemoryStorage::size() const noexcept {
+        std::lock_guard lock {mutex_};
+
         return values_.size();
     }
 
     void InMemoryStorage::clear() {
+        std::lock_guard lock {mutex_};
+
         values_.clear();
     }
 }
