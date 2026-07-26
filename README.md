@@ -113,7 +113,18 @@ $4
 alex
 ```
 
-The current TCP server accepts one client and exits when that client disconnects.
+The current TCP server accepts clients in a blocking loop and serves one client at a time.
+It keeps running until Ctrl+C is pressed.
+
+Stop the server:
+```text
+Ctrl+C
+```
+
+The server prints:
+```text
+AsterKV server stopped.
+```
 
 ## Development principles
 - C++23.

@@ -60,6 +60,11 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added `asterd --listen <host:port>` TCP listen mode.
 - Added network endpoint tests without additional external dependencies.
 - Added TCP server foundation architecture documentation and ADR.
+- Added blocking TCP accept loop for `asterd --listen`.
+- Added graceful shutdown support for `asterd --listen` through SIGINT and SIGTERM.
+- Added server-side stop callback support to `TcpLineServer`.
+- Added missing-listen-address smoke test for `asterd --listen`.
+- Added TCP accept loop architecture documentation and ADR.
 
 ### Changed
 - Aligned C++ naming conventions:
@@ -67,6 +72,7 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
   - functions use lowerCamelCase;
   - variables use lowerCamelCase;
   - headers use `.h`.
+- Changed `asterd --listen` from one-client execution to a long-running sequential server loop.
 
 ### Fixed
 

@@ -26,7 +26,7 @@ src/storage     Storage engine interface and in-memory implementation.
 src/execution   Command dispatching and response model.
 src/protocol    Protocol tokenizer/parser and response serialization.
 src/pipeline    Local in-process command pipeline.
-src/network     TCP endpoint parsing and blocking TCP server foundation.
+src/network     TCP endpoint parsing and blocking sequential TCP server.
 ```
 
 The core library currently contains:
@@ -59,7 +59,9 @@ The pipeline library currently contains:
 
 The network library currently contains:
 - TCP endpoint representation and parsing;
-- blocking line-based TCP server for one client.
+- blocking line-based TCP server;
+- sequential accept loop;
+- graceful shutdown integration points.
 
 ## Planned future modules
 The following modules are planned but not created yet:

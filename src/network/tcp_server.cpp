@@ -5,12 +5,12 @@
 #include <cstring>
 #include <array>
 #include <arpa/inet.h>
+#include <sys/socket.h>
 
 #include <asterkv/network/tcp_server.h>
 #include <asterkv/core/result.h>
 #include <asterkv/pipeline/local_pipeline.h>
-
-#include "asterkv/network/tcp_endpoint.h"
+#include <asterkv/network/tcp_endpoint.h>
 
 namespace AsterKV::Network {
     namespace {
@@ -58,6 +58,10 @@ namespace AsterKV::Network {
             int fd_;
         };
 
+        [[nodiscard]] bool isStopRequested(TcpLineServer::StopRequestedCallback stopRequested) noexcept {
+            return stopRequested != nullptr && stopRequested();
+        }
+
         [[nodiscard]] Core::Status systemUnavailableError(std::string_view context) {
             std::string message {context};
             message.append(": ");
@@ -66,7 +70,7 @@ namespace AsterKV::Network {
             return Core::Status::unavailable(std::move(message));
         }
 
-        [[nodiscard]] Core::Status sendAll(int clientFd, std::string_view bytes) {
+        [[nodiscard]] Core::Status sendAll(int clientFd, std::string_view bytes, TcpLineServer::StopRequestedCallback stopRequested) {
             std::size_t totalSent = 0;
 
             while (totalSent < bytes.size()) {
@@ -79,6 +83,10 @@ namespace AsterKV::Network {
 
                 if (sentCount < 0) {
                     if (errno == EINTR) {
+                        if (isStopRequested(stopRequested)) {
+                            return Core::Status::ok();
+                        }
+
                         continue;
                     }
 
@@ -95,7 +103,12 @@ namespace AsterKV::Network {
             return Core::Status::ok();
         }
 
-        [[nodiscard]] Core::Status processLineAndSendResponse(int clientFd, Pipeline::LocalPipeline &pipeline, std::string_view rawLine) {
+        [[nodiscard]] Core::Status processLineAndSendResponse(
+            int clientFd,
+            Pipeline::LocalPipeline &pipeline,
+            std::string_view rawLine,
+            TcpLineServer::StopRequestedCallback stopRequested
+            ) {
             std::string_view line = rawLine;
 
             if (!line.empty() && line.back() == '\r') {
@@ -104,14 +117,19 @@ namespace AsterKV::Network {
 
             const std::string response = pipeline.processLine(line);
 
-            return sendAll(clientFd, response);
+            return sendAll(clientFd, response, stopRequested);
         }
 
-        [[nodiscard]] Core::Status processBufferedLines(int clientFd, Pipeline::LocalPipeline &pipeline, std::string &input) {
+        [[nodiscard]] Core::Status processBufferedLines(
+            int clientFd,
+            Pipeline::LocalPipeline &pipeline,
+            std::string &input,
+            TcpLineServer::StopRequestedCallback stopRequested
+            ) {
             std::size_t newlinePosition = input.find('\n');
             while (newlinePosition != std::string::npos) {
                 const std::string line = input.substr(0, newlinePosition);
-                Core::Status status = processLineAndSendResponse(clientFd, pipeline, line);
+                Core::Status status = processLineAndSendResponse(clientFd, pipeline, line, stopRequested);
                 if (!status.isOk()) {
                     return status;
                 }
@@ -123,14 +141,22 @@ namespace AsterKV::Network {
             return Core::Status::ok();
         }
 
-        [[nodiscard]] Core::Status serveClient(int clientFd, Pipeline::LocalPipeline &pipeline) {
+        [[nodiscard]] Core::Status serveClient(
+            int clientFd,
+            Pipeline::LocalPipeline &pipeline,
+            TcpLineServer::StopRequestedCallback stopRequested
+            ) {
             std::array<char, 4096> buffer {};
             std::string pendingInput;
 
-            while (true) {
+            while (!isStopRequested(stopRequested)) {
                 const ssize_t readCount = ::recv(clientFd, buffer.data(), buffer.size(), 0);
                 if (readCount < 0) {
                     if (errno == EINTR) {
+                        if (isStopRequested(stopRequested)) {
+                            return Core::Status::ok();
+                        }
+
                         continue;
                     }
 
@@ -142,7 +168,7 @@ namespace AsterKV::Network {
                 }
 
                 pendingInput.append(buffer.data(), static_cast<std::size_t>(readCount));
-                Core::Status status = processBufferedLines(clientFd, pipeline, pendingInput);
+                Core::Status status = processBufferedLines(clientFd, pipeline, pendingInput, stopRequested);
 
                 if (!status.isOk()) {
                     return status;
@@ -150,7 +176,7 @@ namespace AsterKV::Network {
             }
 
             if (!pendingInput.empty()) {
-                return processLineAndSendResponse(clientFd, pipeline, pendingInput);
+                return processLineAndSendResponse(clientFd, pipeline, pendingInput, stopRequested);
             }
 
             return Core::Status::ok();
@@ -171,6 +197,63 @@ namespace AsterKV::Network {
 
             return Core::Result<sockaddr_in>::success(address);
         }
+
+        [[nodiscard]] Core::Result<UniqueFd> createListeningSocket(const TcpEndpoint &endpoint) {
+            Core::Result<sockaddr_in> sockerAddr = makeSocketAddress(endpoint);
+
+            if (sockerAddr.isError()) {
+                return Core::Result<UniqueFd>::failure(sockerAddr.status());
+            }
+
+            const int rawServerFd = ::socket(AF_INET, SOCK_STREAM, 0);
+            if (rawServerFd < 0) {
+                return Core::Result<UniqueFd>::failure(systemUnavailableError("failed to create server socket"));
+            }
+
+            UniqueFd serverFd {rawServerFd};
+            int reuseAddress = 1;
+            if (::setsockopt(serverFd.get(), SOL_SOCKET, SO_REUSEADDR, &reuseAddress, sizeof(reuseAddress)) < 0) {
+                return Core::Result<UniqueFd>::failure(systemUnavailableError("failed to configure server socket"));
+            }
+
+            sockaddr_in addr = sockerAddr.value();
+            if (::bind(serverFd.get(), reinterpret_cast<const sockaddr*>(&addr), sizeof(addr)) < 0) {
+                return Core::Result<UniqueFd>::failure(systemUnavailableError("failed to bind server socket"));
+            }
+
+            constexpr int backlog = 16;
+            if (::listen(serverFd.get(), backlog) < 0) {
+                return Core::Result<UniqueFd>::failure(systemUnavailableError("failed to listen on server socket"));
+            }
+
+            return Core::Result<UniqueFd>::success(std::move(serverFd));
+        }
+
+        [[nodiscard]] Core::Status acceptAndServeOneClient(int serverFd, Pipeline::LocalPipeline &pipeline, TcpLineServer::StopRequestedCallback stopRequested) {
+            while (!isStopRequested(stopRequested)) {
+                sockaddr_in clientAddr {};
+                socklen_t clientAddrLen = sizeof(clientAddr);
+
+                const int rawClientFd = ::accept(serverFd, reinterpret_cast<sockaddr*>(&clientAddr), &clientAddrLen);
+                if (rawClientFd < 0) {
+                    if (errno == EINTR) {
+                        if (isStopRequested(stopRequested)) {
+                            return Core::Status::ok();
+                        }
+
+                        continue;
+                    }
+
+                    return systemUnavailableError("failed to accept client connection");
+                }
+
+                UniqueFd clientFd {rawClientFd};
+
+                return serveClient(clientFd.get(), pipeline, stopRequested);
+            }
+
+            return Core::Status::ok();
+        }
     }
 
     TcpLineServer::TcpLineServer(TcpEndpoint endpoint, Pipeline::LocalPipeline &pipeline) : endpoint_(std::move(endpoint)), pipeline_(pipeline) {
@@ -181,49 +264,30 @@ namespace AsterKV::Network {
     }
 
     Core::Status TcpLineServer::runOnce() {
-        Core::Result<sockaddr_in> socketAddr = makeSocketAddress(endpoint_);
-        if (socketAddr.isError()) {
-            return socketAddr.status();
+        Core::Result<UniqueFd> serverFd = createListeningSocket(endpoint_);
+
+        if (serverFd.isError()) {
+            return serverFd.status();
         }
 
-        const int rawServerFd = ::socket(AF_INET, SOCK_STREAM, 0);
-        if (rawServerFd < 0) {
-            return systemUnavailableError("failed to create server socket");
+        return acceptAndServeOneClient(std::move(serverFd).value().get(), pipeline_, nullptr);
+    }
+
+    Core::Status TcpLineServer::run(StopRequestedCallback stopRequested) {
+        Core::Result<UniqueFd> serverFd = createListeningSocket(endpoint_);
+
+        if (serverFd.isError()) {
+            return serverFd.status();
         }
 
-        UniqueFd serverFd {rawServerFd};
-        int reuseAddress = 1;
-
-        if (::setsockopt(serverFd.get(), SOL_SOCKET, SO_REUSEADDR, &reuseAddress, sizeof(reuseAddress)) < 0) {
-            return systemUnavailableError("failed to configure server socket");
+        UniqueFd listeningSocket = std::move(serverFd).value();
+        while (!isStopRequested(stopRequested)) {
+            Core::Status status = acceptAndServeOneClient(listeningSocket.get(), pipeline_, stopRequested);
+            if (!status.isOk()) {
+                return status;
+            }
         }
 
-        sockaddr_in addr = socketAddr.value();
-
-        if (::bind(serverFd.get(), reinterpret_cast<const sockaddr*>(&addr), sizeof(addr)) < 0) {
-            return systemUnavailableError("failed to bind server socket");
-        }
-
-        constexpr int backlog = 16;
-        if (::listen(serverFd.get(), backlog) < 0) {
-            return systemUnavailableError("failed to listen on server socket");
-        }
-
-        sockaddr_in clientAddr {};
-        socklen_t clientAddrLen = sizeof(clientAddr);
-
-        const int rawClientFd = ::accept(
-            serverFd.get(),
-            reinterpret_cast<sockaddr*>(&clientAddr),
-            &clientAddrLen
-        );
-
-        if (rawClientFd < 0) {
-            return systemUnavailableError("failed to accept client connection");
-        }
-
-        UniqueFd clientFd {rawClientFd};
-
-        return serveClient(clientFd.get(), pipeline_);
+        return Core::Status::ok();
     }
 }
