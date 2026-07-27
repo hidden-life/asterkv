@@ -19,18 +19,20 @@ namespace {
             << "Usage: " << execName << " [--version] [--help]\n"
             << "       " << execName << " --local\n"
             << "       " << execName << " --local <command>\n"
-            << "       " << execName << " --listen <host:port>\n\n"
+            << "       " << execName << " --listen <host:port> [--max-clients <count>]\n\n"
             << "AsterKV server daemon.\n\n"
             << "Options:\n"
             << "    --version               Print version information.\n"
             << "    --help                  Print this help message.\n"
             << "    --local                 Run local stdin command mode without TCP networking\n"
-            << "    --listen <host:port>    Run blocking sequential TCP line server until Ctrl+C\n\n"
+            << "    --listen <host:port>    Run blocking sequential TCP line server until Ctrl+C\n"
+            << "    --max-clients <count>   Limit active TCP client workers\n\n"
             << "Examples:\n"
             << "  " << execName << " --local PING\n"
             << "  " << execName << " --local \"SET username alex\"\n"
             << "  printf 'PING'\\n | " << execName << " --local\n"
             << " " << execName << " --listen 127.0.0.1:" << AsterKV::Network::defaultClientPort << '\n'
+            << " " << execName << " --listen 127.0.0.1:" << AsterKV::Network::defaultClientPort << " --max-clients 128\n"
         ;
     }
 
@@ -46,6 +48,23 @@ namespace {
         }
 
         return stream.str();
+    }
+
+    [[nodiscard]] AsterKV::Core::Result<std::size_t> parseMaxClientWorkers(std::string_view value) {
+        std::size_t parsedValue = 0;
+
+        const char* const begin = value.data();
+        const char* const end = value.data() + value.size();
+
+        const auto parseResult = std::from_chars(begin, end, parsedValue);
+
+        if (parseResult.ec != std::errc {} || parseResult.ptr != end || parsedValue == 0) {
+            return AsterKV::Core::Result<std::size_t>::failure(
+                AsterKV::Core::Status::invalidArgument("max clients must be a positive integer")
+            );
+        }
+
+        return AsterKV::Core::Result<std::size_t>::success(parsedValue);
     }
 
     void printProtocolResponse(std::string_view response) {
@@ -98,7 +117,7 @@ namespace {
         return runLocalSingleCommand(argc, argv);
     }
 
-    int runListenMode(std::string_view endpointText) {
+    int runListenMode(std::string_view endpointText, std::size_t maxClientWorkers) {
         auto endpoint = AsterKV::Network::parseTcpEndpoint(endpointText);
 
         if (endpoint.isError()) {
@@ -108,11 +127,13 @@ namespace {
 
         AsterKV::Server::TcpServerOptions options {
             .endpoint = endpoint.value(),
+            .maxClientWorkers = maxClientWorkers,
         };
 
         AsterKV::Server::TcpServerRuntime runtime {std::move(options)};
 
         std::cout << "AsterKV listening on " << AsterKV::Network::tcpEndpointToString(runtime.endpoint()) << '\n'
+            << "Max client workers: " << runtime.options().maxClientWorkers << '\n'
             << "Press Ctrl+C to stop.\n" << std::flush;
 
         AsterKV::Core::Status status = runtime.run();
@@ -125,6 +146,36 @@ namespace {
         std::cout << "AsterKV server stopped.\n" << std::flush;
 
         return EXIT_SUCCESS;
+    }
+
+    int runListenModeFromArguments(int argc, char **argv) {
+        if (argc != 3 && argc != 5) {
+            std::cerr << "--listen requires <host:port>\n";
+
+            return EXIT_FAILURE;
+        }
+
+        std::size_t maxClientWorkers = AsterKV::Network::defaultMaxClientWorkers;
+        if (argc == 5) {
+            const std::string_view optionName = argv[3];
+            if (optionName != "--max-clients") {
+                std::cerr << "Unknown listen options: " << optionName << '\n';
+
+                return EXIT_FAILURE;
+            }
+
+            auto parsedMaxClients = parseMaxClientWorkers(argv[4]);
+
+            if (parsedMaxClients.isError()) {
+                std::cerr << "Invalid max clients: " << parsedMaxClients.status().message() << '\n';
+
+                return EXIT_FAILURE;
+            }
+
+            maxClientWorkers = parsedMaxClients.value();
+        }
+
+        return runListenMode(argv[2], maxClientWorkers);
     }
 }
 
@@ -156,12 +207,7 @@ int main(const int argc, char **argv) {
     }
 
     if (argument == "--listen") {
-        if (argc != 3) {
-            std::cerr << "--listen requires <host:port>\n";
-            return EXIT_FAILURE;
-        }
-
-        return runListenMode(argv[2]);
+        return runListenModeFromArguments(argc, argv);
     }
 
     std::cerr << "Unknown argument: " << argument << std::endl;

@@ -77,6 +77,10 @@ int main() {
         return 1;
     }
 
+    if (options.maxClientWorkers != AsterKV::Network::defaultMaxClientWorkers) {
+        return 1;
+    }
+
     AsterKV::Server::SignalShutdownController::reset();
     if (AsterKV::Server::SignalShutdownController::stopRequested()) {
         return 1;

@@ -6,7 +6,8 @@ and low-level network serving.
 The server module currently provides:
 - `TcpServerOptions`;
 - `SignalShutdownController`;
-- `TcpServerRuntime`.
+- `TcpServerRuntime`;
+- max client worker configuration.
 
 ## Responsibility split
 `apps/asterd` is responsible for:
@@ -30,7 +31,7 @@ The server module currently provides:
 ```text
 asterd --listen <host:port>
     -> parse TcpEndpoint
-    -> create TcpServerOptions
+    -> create TcpServerOptions with endpoint and max client worker limit
     -> create TcpServerRuntime
     -> install shutdown signal handlers
     -> run TcpLineServer

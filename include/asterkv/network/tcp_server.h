@@ -5,21 +5,31 @@
 #include <asterkv/network/tcp_endpoint.h>
 #include <asterkv/pipeline/local_pipeline.h>
 
+#include <cstddef>
+
 namespace AsterKV::Network {
+    constexpr std::size_t defaultMaxClientWorkers = 128;
+
+    struct TcpLineServerOptions final {
+        std::size_t maxClientWorkers = defaultMaxClientWorkers;
+    };
+
     class TcpLineServer final {
     public:
         using StopRequestedCallback = bool (*)() noexcept;
 
-        TcpLineServer(TcpEndpoint endpoint, Pipeline::LocalPipeline &pipeline);
+        TcpLineServer(TcpEndpoint endpoint, Pipeline::LocalPipeline &pipeline, TcpLineServerOptions options = {});
 
         [[nodiscard]] const TcpEndpoint &endpoint() const noexcept;
-        [[nodiscard]] Core::Status runOnce();
+        [[nodiscard]] const TcpLineServerOptions &options() const noexcept;
 
+        [[nodiscard]] Core::Status runOnce();
         [[nodiscard]] Core::Status run(StopRequestedCallback stopRequested);
 
     private:
         TcpEndpoint endpoint_;
         Pipeline::LocalPipeline &pipeline_;
+        TcpLineServerOptions options_;
     };
 }
 

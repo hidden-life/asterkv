@@ -8,7 +8,8 @@ namespace AsterKV::Server {
             .endpoint = Network::TcpEndpoint {
                 .host = "127.0.0.1",
                 .port = Network::defaultClientPort,
-            }
+            },
+            .maxClientWorkers = Network::defaultMaxClientWorkers,
         };
     }
 }

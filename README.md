@@ -113,8 +113,13 @@ $4
 alex
 ```
 
-The current TCP server accepts clients in a blocking loop and serves one client at a time.
-It keeps running until Ctrl+C is pressed.
+Limit active TCP client workers:
+```bash
+./build/debug/apps/asterd/asterd --listen 127.0.0.1:7721 --max-clients 128
+```
+
+When the limit is reached, new clients receive an unavailable error response and
+the connection is closed.
 
 Stop the server:
 ```text

@@ -68,4 +68,14 @@ if (BUILD_TESTING)
             PROPERTIES
                 PASS_REGULAR_EXPRESSION "--listen requires"
     )
+
+    add_test(
+            NAME asterd_rejects_invalid_max_clients
+            COMMAND /bin/sh -c "\"$<TARGET_FILE:asterd>\" --listen 127.0.0.1:17799 --max-clients 0 2>&1; test $? -ne 0"
+    )
+
+    set_tests_properties(asterd_rejects_invalid_max_clients
+            PROPERTIES
+                PASS_REGULAR_EXPRESSION "Invalid max clients"
+    )
 endif ()

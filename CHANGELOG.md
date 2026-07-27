@@ -83,6 +83,13 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added mutex protection to `InMemoryStorage`.
 - Added storage concurrency test coverage.
 - Added TCP client worker thread architecture documentation and ADR.
+- Added `Network::TcpLineServerOptions`.
+- Added default active TCP client worker limit.
+- Added `Server::TcpServerOptions::maxClientWorkers`.
+- Added `asterd --max-clients <count>` for TCP listen mode.
+- Added TCP client limit rejection response.
+- Added TCP client limit integration smoke test.
+- Added TCP client lifecycle limits documentation and ADR.
 
 ### Changed
 - Aligned C++ naming conventions:
@@ -98,6 +105,8 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Changed `asterd --listen` from sequential client serving to thread-per-client serving.
 - Changed `LocalPipeline::processLine()` to be const.
 - Changed `CommandDispatcher::dispatch()` to be const.
+- Changed `TcpLineServer` construction to accept TCP line server options.
+- Changed `asterd --listen` startup output to include the max client worker count.
 
 ### Fixed
 
