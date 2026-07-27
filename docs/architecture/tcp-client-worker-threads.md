@@ -35,6 +35,17 @@ during shutdown.
 
 On shutdown, the accept loop stops and joins client worker threads.
 
+## Client limit
+The thread-per-client model is bounded by a maximum active worker count.
+
+When the limit is reached, new clients receive:
+```text
+-ERR unavailable maximum client worker limit reached
+```
+and connection is closed.
+
+This prevents unbounded thread creation.
+
 ## Current limitations
 The current worker model is intentionally simple.
 

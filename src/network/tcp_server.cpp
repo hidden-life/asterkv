@@ -4,6 +4,7 @@
 #include <utility>
 #include <cstring>
 #include <array>
+#include <memory>
 #include <thread>
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -15,6 +16,8 @@
 
 namespace AsterKV::Network {
     namespace {
+        constexpr std::string_view clientLimitResponse = "-ERR unavailable maximum client worker limit reached\r\n";
+
         class UniqueFd final {
         public:
             explicit UniqueFd(int fd) noexcept : fd_(fd) {}
@@ -85,7 +88,7 @@ namespace AsterKV::Network {
             [[nodiscard]] static AcceptClientResult stopped() {
                 return AcceptClientResult {
                     .type = AcceptClientResultType::Stopped,
-                    .clientFd = UniqueFd {1},
+                    .clientFd = UniqueFd {-1},
                     .status = Core::Status::ok(),
                 };
             }
@@ -93,11 +96,24 @@ namespace AsterKV::Network {
             [[nodiscard]] static AcceptClientResult failed(Core::Status status) {
                 return AcceptClientResult {
                     .type = AcceptClientResultType::Failed,
-                    .clientFd = UniqueFd {1},
+                    .clientFd = UniqueFd {-1},
                     .status = std::move(status),
                 };
             }
         };
+
+        struct ClientWorkerSlot final {
+            std::thread thread;
+            std::shared_ptr<std::atomic_bool> finished;
+        };
+
+        [[nodiscard]] Core::Status validateOptions(const TcpLineServerOptions &options) {
+            if (options.maxClientWorkers == 0) {
+                return Core::Status::invalidArgument("max client workers must be greater than zero");
+            }
+
+            return Core::Status::ok();
+        }
 
         [[nodiscard]] Core::Status systemUnavailableError(std::string_view context) {
             std::string message {context};
@@ -329,23 +345,62 @@ namespace AsterKV::Network {
             return serveClient(clientResult.clientFd.get(), pipeline, stopRequested);
         }
 
-        void joinClientWorkers(std::vector<std::thread> &workers) {
-            for (std::thread &worker : workers) {
-                if (worker.joinable()) {
-                    worker.join();
+        void joinClientWorkers(std::vector<ClientWorkerSlot> &workers) {
+            for (ClientWorkerSlot &worker : workers) {
+                if (worker.thread.joinable()) {
+                    worker.thread.join();
+                }
+            }
+
+            workers.clear();
+        }
+
+        void joinFinishedClientWorkers(std::vector<ClientWorkerSlot> &workers) {
+            auto it = workers.begin();
+
+            while (it != workers.end()) {
+                if (it->finished->load(std::memory_order_acquire)) {
+                    if (it->thread.joinable()) {
+                        it->thread.join();
+                    }
+
+                    it = workers.erase(it);
+                } else {
+                    ++it;
                 }
             }
         }
+
+        [[nodiscard]] bool hasWorkerCapacity(const TcpLineServerOptions &options, const std::atomic_size_t &activeWorkers) noexcept {
+            return activeWorkers.load(std::memory_order_relaxed) < options.maxClientWorkers;
+        }
+
+        void rejectClientBecauseLimitReached(int clientFd, TcpLineServer::StopRequestedCallback stopRequested) {
+            static_cast<void>(sendAll(clientFd, clientLimitResponse, stopRequested));
+        }
     }
 
-    TcpLineServer::TcpLineServer(TcpEndpoint endpoint, Pipeline::LocalPipeline &pipeline) : endpoint_(std::move(endpoint)), pipeline_(pipeline) {
+    TcpLineServer::TcpLineServer(
+        TcpEndpoint endpoint,
+        Pipeline::LocalPipeline &pipeline,
+        TcpLineServerOptions options
+        ) : endpoint_(std::move(endpoint)), pipeline_(pipeline), options_(options) {
     }
 
-    const TcpEndpoint & TcpLineServer::endpoint() const noexcept {
+    const TcpEndpoint &TcpLineServer::endpoint() const noexcept {
         return endpoint_;
     }
 
+    const TcpLineServerOptions &TcpLineServer::options() const noexcept {
+        return options_;
+    }
+
     Core::Status TcpLineServer::runOnce() {
+        Core::Status optionsStatus = validateOptions(options_);
+        if (!optionsStatus.isOk()) {
+            return optionsStatus;
+        }
+
         Core::Result<UniqueFd> serverFd = createListeningSocket(endpoint_);
 
         if (serverFd.isError()) {
@@ -358,6 +413,11 @@ namespace AsterKV::Network {
     }
 
     Core::Status TcpLineServer::run(StopRequestedCallback stopRequested) {
+        Core::Status optionsStatus = validateOptions(options_);
+        if (!optionsStatus.isOk()) {
+            return optionsStatus;
+        }
+
         Core::Result<UniqueFd> serverFd = createListeningSocket(endpoint_);
 
         if (serverFd.isError()) {
@@ -365,9 +425,12 @@ namespace AsterKV::Network {
         }
 
         UniqueFd listeningSocket = std::move(serverFd).value();
-        std::vector<std::thread> workers;
+        std::vector<ClientWorkerSlot> workers;
+        std::atomic_size_t activeClientWorkers {0};
 
         while (!isStopRequested(stopRequested)) {
+            joinFinishedClientWorkers(workers);
+
             AcceptClientResult clientResult = acceptClient(listeningSocket.get(), stopRequested);
             if (clientResult.type == AcceptClientResultType::Stopped) {
                 break;
@@ -379,9 +442,35 @@ namespace AsterKV::Network {
                 return clientResult.status;
             }
 
-            workers.emplace_back(
-                [clientFd = std::move(clientResult.clientFd), &pipeline = pipeline_, stopRequested] () mutable {
-                    static_cast<void>(serveClient(clientFd.get(), pipeline, stopRequested));
+            UniqueFd connectedClient = std::move(clientResult.clientFd);
+            if (!hasWorkerCapacity(options_, activeClientWorkers)) {
+                rejectClientBecauseLimitReached(connectedClient.get(), stopRequested);
+                continue;
+            }
+
+            activeClientWorkers.fetch_add(1, std::memory_order_relaxed);
+
+            auto finished = std::make_shared<std::atomic_bool>(false);
+
+            workers.push_back(
+                ClientWorkerSlot {
+                    .thread = std::thread(
+                        [clientFd = std::move(connectedClient),
+                            &pipeline = pipeline_,
+                            stopRequested,
+                            &activeClientWorkers,
+                            finished
+                        ]() mutable {
+                            try {
+                                static_cast<void>(serveClient(clientFd.get(), pipeline, stopRequested));
+                            } catch (...) {}
+
+                            activeClientWorkers.fetch_sub(1, std::memory_order_relaxed);
+
+                            finished->store(true, std::memory_order_relaxed);
+                        }
+                    ),
+                    .finished = finished
                 }
             );
         }

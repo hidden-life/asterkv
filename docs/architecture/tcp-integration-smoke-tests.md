@@ -14,7 +14,8 @@ The integration test verifies:
 - `DEL`;
 - missing-key error response;
 - graceful shutdown through `SIGTERM`;
-- concurrent client handling while another client remains connected.
+- concurrent client handling while another client remains connected;
+- active client worker limit rejection.
 
 ## Netcat behavior
 The project currently uses:
@@ -50,6 +51,21 @@ Strict mode:
 ```bash
 cmake --preset debug -DASTERKV_REQUIRE_TEST_DEPENDENCIES=ON
 ```
+
+## Client limit smoke test
+The client limit smoke test starts `asterd` with:
+```bash
+--max-clients 1
+```
+
+The test keeps one TCP client connected and then opens another client.
+
+The second client must receive:
+```text
+-ERR unavailable maximum client worker limit reached
+```
+
+This verifies that the active worker limit is enforced.
 
 ## Current limitations
 The smoke test uses a fixed local test port:

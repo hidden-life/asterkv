@@ -8,7 +8,9 @@ namespace AsterKV::Server {
         options_(std::move(options)),
         storage_(),
         pipeline_(storage_),
-        server_(options_.endpoint, pipeline_) {
+        server_(options_.endpoint, pipeline_, Network::TcpLineServerOptions {
+            .maxClientWorkers = options_.maxClientWorkers,
+        }) {
     }
 
     const TcpServerOptions & TcpServerRuntime::options() const noexcept {
