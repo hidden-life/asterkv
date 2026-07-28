@@ -6,12 +6,15 @@
 #include <asterkv/pipeline/local_pipeline.h>
 
 #include <cstddef>
+#include <cstdint>
 
 namespace AsterKV::Network {
     constexpr std::size_t defaultMaxClientWorkers = 128;
+    constexpr std::uint32_t defaultClientIdleTimeoutSeconds = 300;
 
     struct TcpLineServerOptions final {
         std::size_t maxClientWorkers = defaultMaxClientWorkers;
+        std::uint32_t clientIdleTimeoutSeconds = defaultClientIdleTimeoutSeconds;
     };
 
     class TcpLineServer final {

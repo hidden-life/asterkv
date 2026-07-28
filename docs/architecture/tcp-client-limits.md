@@ -33,11 +33,18 @@ Without a client limit, a large number of clients could create an unbounded numb
 The current limit is a simple lifecycle protection mechanism before worker pools
 or event-loop networking are introduced.
 
+## Interaction with idle timeout
+The active client worker limit works together with the idle client timeout.
+
+If a client remains connected but sends no data, the idle timeout eventually closes
+that connection.
+
+This releases the worker slot and allows later clients to connect.
+
 ## Current limitations
 The current implementation does not provide:
 - dynamic limit changes;
 - per-client identifiers;
-- idle timeout policy;
 - admission queues;
 - worker pool;
 - backpressure metrics;

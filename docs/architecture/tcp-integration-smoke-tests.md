@@ -15,7 +15,8 @@ The integration test verifies:
 - missing-key error response;
 - graceful shutdown through `SIGTERM`;
 - concurrent client handling while another client remains connected;
-- active client worker limit rejection.
+- active client worker limit rejection;
+- idle client timeout and worker slot release.
 
 ## Netcat behavior
 The project currently uses:
@@ -66,6 +67,18 @@ The second client must receive:
 ```
 
 This verifies that the active worker limit is enforced.
+
+## Idle timeout smoke test
+The idle timeout smoke test starts `asterd` with:
+```bash
+--max-clients 1 --idle-timeout 1
+```
+
+The test connects one client, sends a command, and then keeps the connection idle.
+
+A second client is initially rejected because the active client worker limit is reached.
+
+After the idle timeout releases the first worker slot, a later client can connect successfully.
 
 ## Current limitations
 The smoke test uses a fixed local test port:

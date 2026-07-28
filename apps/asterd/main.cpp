@@ -9,9 +9,8 @@
 #include <asterkv/pipeline/local_pipeline.h>
 #include <asterkv/storage/in_memory_storage.h>
 #include <asterkv/core/version.h>
-
-#include "asterkv/server/tcp_server_options.h"
-#include "asterkv/server/tcp_server_runtime.h"
+#include <asterkv/server/tcp_server_options.h>
+#include <asterkv/server/tcp_server_runtime.h>
 
 namespace {
     void printUsage(std::string_view execName) {
@@ -19,20 +18,21 @@ namespace {
             << "Usage: " << execName << " [--version] [--help]\n"
             << "       " << execName << " --local\n"
             << "       " << execName << " --local <command>\n"
-            << "       " << execName << " --listen <host:port> [--max-clients <count>]\n\n"
+            << "       " << execName << " --listen <host:port> [--max-clients <count>] [--idle-timeout <seconds>]\n\n"
             << "AsterKV server daemon.\n\n"
             << "Options:\n"
-            << "    --version               Print version information.\n"
-            << "    --help                  Print this help message.\n"
-            << "    --local                 Run local stdin command mode without TCP networking\n"
-            << "    --listen <host:port>    Run blocking sequential TCP line server until Ctrl+C\n"
-            << "    --max-clients <count>   Limit active TCP client workers\n\n"
+            << "    --version                   Print version information.\n"
+            << "    --help                      Print this help message.\n"
+            << "    --local                     Run local stdin command mode without TCP networking\n"
+            << "    --listen <host:port>        Run blocking sequential TCP line server until Ctrl+C\n"
+            << "    --max-clients <count>       Limit active TCP client workers\n"
+            << "    --idle-timeout <seconds>    Close idle TCP clients after timeout\n\n"
             << "Examples:\n"
             << "  " << execName << " --local PING\n"
             << "  " << execName << " --local \"SET username alex\"\n"
             << "  printf 'PING'\\n | " << execName << " --local\n"
             << " " << execName << " --listen 127.0.0.1:" << AsterKV::Network::defaultClientPort << '\n'
-            << " " << execName << " --listen 127.0.0.1:" << AsterKV::Network::defaultClientPort << " --max-clients 128\n"
+            << " " << execName << " --listen 127.0.0.1:" << AsterKV::Network::defaultClientPort << " --max-clients 128 --idle timeout 300\n"
         ;
     }
 
@@ -50,7 +50,7 @@ namespace {
         return stream.str();
     }
 
-    [[nodiscard]] AsterKV::Core::Result<std::size_t> parseMaxClientWorkers(std::string_view value) {
+    [[nodiscard]] AsterKV::Core::Result<std::size_t> parsePositiveSize(std::string_view value, std::string_view err) {
         std::size_t parsedValue = 0;
 
         const char* const begin = value.data();
@@ -60,11 +60,26 @@ namespace {
 
         if (parseResult.ec != std::errc {} || parseResult.ptr != end || parsedValue == 0) {
             return AsterKV::Core::Result<std::size_t>::failure(
-                AsterKV::Core::Status::invalidArgument("max clients must be a positive integer")
+                AsterKV::Core::Status::invalidArgument(std::string {err})
             );
         }
 
         return AsterKV::Core::Result<std::size_t>::success(parsedValue);
+    }
+
+    [[nodiscard]] AsterKV::Core::Result<std::uint32_t> parseIdleTimeoutSeconds(std::string_view value) {
+        auto parsedValue = parsePositiveSize(value, "idle timeout must be a positive integer");
+        if (parsedValue.isError()) {
+            return AsterKV::Core::Result<std::uint32_t>::failure(parsedValue.status());
+        }
+
+        if (parsedValue.value() > std::numeric_limits<std::uint32_t>::max()) {
+            return AsterKV::Core::Result<std::uint32_t>::failure(
+                AsterKV::Core::Status::invalidArgument("idle timeout is too large")
+                );
+        }
+
+        return AsterKV::Core::Result<std::uint32_t>::success(static_cast<std::uint32_t>(parsedValue.value()));
     }
 
     void printProtocolResponse(std::string_view response) {
@@ -117,23 +132,12 @@ namespace {
         return runLocalSingleCommand(argc, argv);
     }
 
-    int runListenMode(std::string_view endpointText, std::size_t maxClientWorkers) {
-        auto endpoint = AsterKV::Network::parseTcpEndpoint(endpointText);
-
-        if (endpoint.isError()) {
-            std::cerr << "Invalid listen address: " << endpoint.status().message() << '\n';
-            return EXIT_FAILURE;
-        }
-
-        AsterKV::Server::TcpServerOptions options {
-            .endpoint = endpoint.value(),
-            .maxClientWorkers = maxClientWorkers,
-        };
-
-        AsterKV::Server::TcpServerRuntime runtime {std::move(options)};
+    int runListenMode(const AsterKV::Server::TcpServerOptions &options) {
+        AsterKV::Server::TcpServerRuntime runtime {options};
 
         std::cout << "AsterKV listening on " << AsterKV::Network::tcpEndpointToString(runtime.endpoint()) << '\n'
             << "Max client workers: " << runtime.options().maxClientWorkers << '\n'
+            << "Client idle timeout seconds: " << runtime.options().clientIdleTimeoutSeconds << '\n'
             << "Press Ctrl+C to stop.\n" << std::flush;
 
         AsterKV::Core::Status status = runtime.run();
@@ -149,33 +153,74 @@ namespace {
     }
 
     int runListenModeFromArguments(int argc, char **argv) {
-        if (argc != 3 && argc != 5) {
+        if (argc < 3) {
             std::cerr << "--listen requires <host:port>\n";
 
             return EXIT_FAILURE;
         }
 
-        std::size_t maxClientWorkers = AsterKV::Network::defaultMaxClientWorkers;
-        if (argc == 5) {
-            const std::string_view optionName = argv[3];
-            if (optionName != "--max-clients") {
-                std::cerr << "Unknown listen options: " << optionName << '\n';
+        auto endpoint = AsterKV::Network::parseTcpEndpoint(argv[2]);
+        if (endpoint.isError()) {
+            std::cerr << "Invalid listen address: " << endpoint.status().message() << '\n';
 
-                return EXIT_FAILURE;
-            }
-
-            auto parsedMaxClients = parseMaxClientWorkers(argv[4]);
-
-            if (parsedMaxClients.isError()) {
-                std::cerr << "Invalid max clients: " << parsedMaxClients.status().message() << '\n';
-
-                return EXIT_FAILURE;
-            }
-
-            maxClientWorkers = parsedMaxClients.value();
+            return EXIT_FAILURE;
         }
 
-        return runListenMode(argv[2], maxClientWorkers);
+        AsterKV::Server::TcpServerOptions options = AsterKV::Server::defaultServerOptions();
+        options.endpoint = endpoint.value();
+        int index = 3;
+
+        while (index < argc) {
+            const std::string_view optionName = argv[index];
+
+            if (optionName == "--max-clients") {
+                if (index + 1 >= argc) {
+                    std::cerr << "--max-clients requires <count>\n";
+
+                    return EXIT_FAILURE;
+                }
+
+                auto parsedMaxClients = parsePositiveSize(
+                    argv[index + 1],
+                    "max clients must be a positive integer"
+                );
+
+                if (parsedMaxClients.isError()) {
+                    std::cerr << "Invalid max clients: " << parsedMaxClients.status().message() << '\n';
+
+                    return EXIT_FAILURE;
+                }
+
+                options.maxClientWorkers = parsedMaxClients.value();
+                index += 2;
+                continue;
+            }
+
+            if (optionName == "--idle-timeout") {
+                if (index + 1 >= argc) {
+                    std::cerr << "--idle-timeout requires <seconds>\n";
+
+                    return EXIT_FAILURE;
+                }
+
+                auto parsedIdleTimeout = parseIdleTimeoutSeconds(argv[index + 1]);
+                if (parsedIdleTimeout.isError()) {
+                    std::cerr << "Invalid idle timeout: " << parsedIdleTimeout.status().message() << '\n';
+
+                    return EXIT_FAILURE;
+                }
+
+                options.clientIdleTimeoutSeconds = parsedIdleTimeout.value();
+                index += 2;
+                continue;
+            }
+
+            std::cerr << "Unknown listen option: " << optionName << '\n';
+
+            return EXIT_FAILURE;
+        }
+
+        return runListenMode(options);
     }
 }
 

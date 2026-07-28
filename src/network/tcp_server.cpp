@@ -107,12 +107,27 @@ namespace AsterKV::Network {
             std::shared_ptr<std::atomic_bool> finished;
         };
 
+        using Clock = std::chrono::steady_clock;
+
         [[nodiscard]] Core::Status validateOptions(const TcpLineServerOptions &options) {
             if (options.maxClientWorkers == 0) {
                 return Core::Status::invalidArgument("max client workers must be greater than zero");
             }
 
+            if (options.clientIdleTimeoutSeconds == 0) {
+                return Core::Status::invalidArgument("client idle timeout seconds must be greater than zero");
+            }
+
             return Core::Status::ok();
+        }
+
+        [[nodiscard]] bool isClientIdleTimedOut(
+            const TcpLineServerOptions &options,
+            Clock::time_point lastActivity
+        ) {
+            const auto idleFor = Clock::now() - lastActivity;
+
+            return idleFor >= std::chrono::seconds {options.clientIdleTimeoutSeconds};
         }
 
         [[nodiscard]] Core::Status systemUnavailableError(std::string_view context) {
@@ -178,7 +193,7 @@ namespace AsterKV::Network {
 
         [[nodiscard]] Core::Status processLineAndSendResponse(
             int clientFd,
-            Pipeline::LocalPipeline &pipeline,
+            const Pipeline::LocalPipeline &pipeline,
             std::string_view rawLine,
             TcpLineServer::StopRequestedCallback stopRequested
             ) {
@@ -195,7 +210,7 @@ namespace AsterKV::Network {
 
         [[nodiscard]] Core::Status processBufferedLines(
             int clientFd,
-            Pipeline::LocalPipeline &pipeline,
+            const Pipeline::LocalPipeline &pipeline,
             std::string &input,
             TcpLineServer::StopRequestedCallback stopRequested
             ) {
@@ -216,17 +231,31 @@ namespace AsterKV::Network {
 
         [[nodiscard]] Core::Status serveClient(
             int clientFd,
-            Pipeline::LocalPipeline &pipeline,
+            const Pipeline::LocalPipeline &pipeline,
+            const TcpLineServerOptions &options,
             TcpLineServer::StopRequestedCallback stopRequested
             ) {
             std::array<char, 4096> buffer {};
             std::string pendingInput;
+            Clock::time_point lastActivity = Clock::now();
 
             while (!isStopRequested(stopRequested)) {
                 const ssize_t readCount = ::recv(clientFd, buffer.data(), buffer.size(), 0);
                 if (readCount < 0) {
-                    if (errno == EINTR || isTemporarySocketWaitError()) {
+                    if (errno == EINTR) {
                         if (isStopRequested(stopRequested)) {
+                            return Core::Status::ok();
+                        }
+
+                        continue;
+                    }
+
+                    if (isTemporarySocketWaitError()) {
+                        if (isStopRequested(stopRequested)) {
+                            return Core::Status::ok();
+                        }
+
+                        if (isClientIdleTimedOut(options, lastActivity)) {
                             return Core::Status::ok();
                         }
 
@@ -239,6 +268,8 @@ namespace AsterKV::Network {
                 if (readCount == 0) {
                     break;
                 }
+
+                lastActivity = Clock::now();
 
                 pendingInput.append(buffer.data(), static_cast<std::size_t>(readCount));
                 Core::Status status = processBufferedLines(clientFd, pipeline, pendingInput, stopRequested);
@@ -332,7 +363,12 @@ namespace AsterKV::Network {
             return AcceptClientResult::stopped();
         }
 
-        [[nodiscard]] Core::Status acceptAndServeOneClient(int serverFd, Pipeline::LocalPipeline &pipeline, TcpLineServer::StopRequestedCallback stopRequested) {
+        [[nodiscard]] Core::Status acceptAndServeOneClient(
+            int serverFd,
+            const Pipeline::LocalPipeline &pipeline,
+            const TcpLineServerOptions &options,
+            TcpLineServer::StopRequestedCallback stopRequested
+            ) {
             AcceptClientResult clientResult = acceptClient(serverFd, stopRequested);
             if (clientResult.type == AcceptClientResultType::Stopped) {
                     return Core::Status::ok();
@@ -342,7 +378,7 @@ namespace AsterKV::Network {
                 return clientResult.status;
             }
 
-            return serveClient(clientResult.clientFd.get(), pipeline, stopRequested);
+            return serveClient(clientResult.clientFd.get(), pipeline, options, stopRequested);
         }
 
         void joinClientWorkers(std::vector<ClientWorkerSlot> &workers) {
@@ -409,7 +445,7 @@ namespace AsterKV::Network {
 
         UniqueFd listeningSocket = std::move(serverFd).value();
 
-        return acceptAndServeOneClient(listeningSocket.get(), pipeline_, nullptr);
+        return acceptAndServeOneClient(listeningSocket.get(), pipeline_, options_, nullptr);
     }
 
     Core::Status TcpLineServer::run(StopRequestedCallback stopRequested) {
@@ -457,12 +493,13 @@ namespace AsterKV::Network {
                     .thread = std::thread(
                         [clientFd = std::move(connectedClient),
                             &pipeline = pipeline_,
+                            &options = options_,
                             stopRequested,
                             &activeClientWorkers,
                             finished
                         ]() mutable {
                             try {
-                                static_cast<void>(serveClient(clientFd.get(), pipeline, stopRequested));
+                                static_cast<void>(serveClient(clientFd.get(), pipeline, options, stopRequested));
                             } catch (...) {}
 
                             activeClientWorkers.fetch_sub(1, std::memory_order_relaxed);

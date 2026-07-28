@@ -77,6 +77,10 @@ int main() {
         return 1;
     }
 
+    if (options.clientIdleTimeoutSeconds != AsterKV::Network::defaultClientIdleTimeoutSeconds) {
+        return 1;
+    }
+
     if (options.maxClientWorkers != AsterKV::Network::defaultMaxClientWorkers) {
         return 1;
     }

@@ -78,4 +78,14 @@ if (BUILD_TESTING)
             PROPERTIES
                 PASS_REGULAR_EXPRESSION "Invalid max clients"
     )
+
+    add_test(
+            NAME asterd_rejects_invalid_idle_timeout
+            COMMAND /bin/sh -c "\"$<TARGET_FILE:asterd>\" --listen 127.0.0.1:17799 --idle-timeout 0 2>&1; test $? -ne 0"
+    )
+
+    set_tests_properties(asterd_rejects_invalid_idle_timeout
+            PROPERTIES
+                PASS_REGULAR_EXPRESSION "Invalid idle timeout"
+    )
 endif ()
