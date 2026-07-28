@@ -38,6 +38,19 @@ asterd --listen <host:port>
     -> run TcpLineServer
 ```
 
+## Configuration file entry point
+`asterd` can build `TcpServerOptions` from a configuration file through the config
+module.
+
+```text
+asterd --config config/asterd.conf
+    -> Config::loadServerConfigFile
+    -> Server::TcpServerOptions
+    -> TcpServerRuntime
+```
+
+The server runtime still receives fully parsed options and does not read files directly.
+
 ## Current limitations
 The current runtime still uses:
 - in-memory storage only;

@@ -147,6 +147,19 @@ The examples use `nc -q 1` so netcat closes the client connection after stdin re
 This matters because the current TCP server is sequential and serves one connected
 client at a time.
 
+### Server configuration file
+Create a config file:
+```ini
+listen = 127.0.0.1:7721
+max_clients = 128
+idle_timeout_seconds = 300
+```
+
+Run `asterd` with the config file:
+```bash
+./build/debug/apps/asterd/asterd --config config/asterd.conf
+```
+
 ## Development principles
 - C++23.
 - Linux-first.

@@ -9,6 +9,7 @@ target_link_libraries(asterd
         AsterKV::Storage
         AsterKV::Network
         AsterKV::Server
+        AsterKV::Config
 )
 
 asterkvApplyCompilerOptions(asterd)
@@ -87,5 +88,15 @@ if (BUILD_TESTING)
     set_tests_properties(asterd_rejects_invalid_idle_timeout
             PROPERTIES
                 PASS_REGULAR_EXPRESSION "Invalid idle timeout"
+    )
+
+    add_test(
+            NAME asterd_rejects_missing_config_file
+            COMMAND /bin/sh -c "\"$<TARGET_FILE:asterd>\" --config /tmp/asterkv_missing_config_file.conf 2>&1; test $? -ne 0"
+    )
+
+    set_tests_properties(asterd_rejects_missing_config_file
+            PROPERTIES
+                PASS_REGULAR_EXPRESSION "Config error"
     )
 endif ()

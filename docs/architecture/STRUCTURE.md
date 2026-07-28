@@ -28,6 +28,7 @@ src/protocol    Protocol tokenizer/parser and response serialization.
 src/pipeline    Local in-process command pipeline.
 src/network     TCP endpoint parsing and thread-per-client TCP server.
 src/server      Server runtime options, shutdown handling, and runtime wiring.
+src/config      Server configuration file parsing and loading.
 ```
 
 The core library currently contains:
@@ -71,6 +72,11 @@ The server library currently contains:
 - signal-based shutdown controller;
 - default TCP server runtime wiring.
 
+The configuration library currently contains:
+- line-based server configuration parsing;
+- server configuration file loading;
+- conversion into `Server::TcpServerOptions`.
+
 ## Tests
 ```text
 tests/headers           Public headers compile tests.
@@ -82,6 +88,7 @@ tests/pipeline          Local pipeline tests.
 tests/network           Network unit-style tests.
 tests/integration       Process-level integration smoke tests.
 tests/server            Server runtime boundary tests.
+tests/config            Configuration parser tests.
 ```
 
 ## Planned future modules

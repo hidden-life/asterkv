@@ -13,6 +13,7 @@
 #include <asterkv/server/signal_shutdown_controller.h>
 #include <asterkv/server/tcp_server_options.h>
 #include <asterkv/server/tcp_server_runtime.h>
+#include <asterkv/config/server_config.h>
 
 #include <string>
 
@@ -82,6 +83,20 @@ int main() {
     }
 
     if (options.maxClientWorkers != AsterKV::Network::defaultMaxClientWorkers) {
+        return 1;
+    }
+
+    auto parsedConfig = AsterKV::Config::parseServerConfig(
+        "listen = 127.0.0.1:7721\n"
+        "max_clients = 128\n"
+        "idle_timeout_seconds = 300\n"
+    );
+
+    if (parsedConfig.isError()) {
+        return 1;
+    }
+
+    if (parsedConfig.value().endpoint.port != AsterKV::Network::defaultClientPort) {
         return 1;
     }
 
