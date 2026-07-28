@@ -5,11 +5,13 @@
 #include <asterkv/network/tcp_server.h>
 
 #include <cstddef>
+#include <cstdint>
 
 namespace AsterKV::Server {
     struct TcpServerOptions final {
         Network::TcpEndpoint endpoint;
         std::size_t maxClientWorkers;
+        std::uint32_t clientIdleTimeoutSeconds;
     };
 
     [[nodiscard]] TcpServerOptions defaultServerOptions();

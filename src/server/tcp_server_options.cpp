@@ -10,6 +10,7 @@ namespace AsterKV::Server {
                 .port = Network::defaultClientPort,
             },
             .maxClientWorkers = Network::defaultMaxClientWorkers,
+            .clientIdleTimeoutSeconds = Network::defaultClientIdleTimeoutSeconds,
         };
     }
 }

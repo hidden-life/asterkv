@@ -10,6 +10,7 @@ namespace AsterKV::Server {
         pipeline_(storage_),
         server_(options_.endpoint, pipeline_, Network::TcpLineServerOptions {
             .maxClientWorkers = options_.maxClientWorkers,
+            .clientIdleTimeoutSeconds = options_.clientIdleTimeoutSeconds,
         }) {
     }
 

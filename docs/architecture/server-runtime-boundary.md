@@ -7,7 +7,8 @@ The server module currently provides:
 - `TcpServerOptions`;
 - `SignalShutdownController`;
 - `TcpServerRuntime`;
-- max client worker configuration.
+- max client worker configuration;
+- TCP client idle timeout configuration.
 
 ## Responsibility split
 `apps/asterd` is responsible for:

@@ -121,6 +121,18 @@ Limit active TCP client workers:
 When the limit is reached, new clients receive an unavailable error response and
 the connection is closed.
 
+Configure idle client timeout:
+```bash
+./build/debug/apps/asterd/asterd --listen 127.0.0.1:7721 --idle-timeout 300
+```
+
+Use both TCP lifecycle options:
+```bash
+./build/debug/apps/asterd/asterd --listen 127.0.0.1:7721 --max-clients 128 --idle-timeout 300
+```
+
+Idle clients are disconnected after the configured timeout.
+
 Stop the server:
 ```text
 Ctrl+C

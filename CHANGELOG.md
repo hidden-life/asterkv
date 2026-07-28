@@ -90,6 +90,12 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added TCP client limit rejection response.
 - Added TCP client limit integration smoke test.
 - Added TCP client lifecycle limits documentation and ADR.
+- Added default TCP client idle timeout configuration.
+- Added `Network::TcpLineServerOptions::clientIdleTimeoutSeconds`.
+- Added `Server::TcpServerOptions::clientIdleTimeoutSeconds`.
+- Added `asterd --idle-timeout <seconds>` for TCP listen mode.
+- Added TCP idle timeout integration smoke test.
+- Added TCP idle timeout architecture documentation and ADR.
 
 ### Changed
 - Aligned C++ naming conventions:
@@ -107,6 +113,9 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Changed `CommandDispatcher::dispatch()` to be const.
 - Changed `TcpLineServer` construction to accept TCP line server options.
 - Changed `asterd --listen` startup output to include the max client worker count.
+- Changed TCP client workers to close idle client connections after the configured timeout.
+- Changed `asterd --listen` option parsing to support multiple listen options.
+- Changed `asterd --listen` startup output to include the idle timeout.
 
 ### Fixed
 

@@ -20,13 +20,19 @@ namespace {
         return left == right;
     }
 
+    [[nodiscard]] bool expectEqual(std::uint32_t left, std::uint32_t right) {
+        return left == right;
+    }
+
     [[nodiscard]] bool testCreatesDefaultOptions() {
         const AsterKV::Server::TcpServerOptions options =
             AsterKV::Server::defaultServerOptions();
 
         return expectEqual(options.endpoint.host, "127.0.0.1") &&
                expectEqual(options.endpoint.port, AsterKV::Network::defaultClientPort) &&
-               expectEqual(options.maxClientWorkers, AsterKV::Network::defaultMaxClientWorkers);
+               expectEqual(options.maxClientWorkers, AsterKV::Network::defaultMaxClientWorkers) &&
+               expectEqual(options.clientIdleTimeoutSeconds,
+                           AsterKV::Network::defaultClientIdleTimeoutSeconds);
     }
 
     [[nodiscard]] bool testRuntimeKeepsConfiguredEndpointAndLimits() {
@@ -36,13 +42,15 @@ namespace {
                 .port = std::uint16_t{17721},
             },
             .maxClientWorkers = std::size_t{16},
+            .clientIdleTimeoutSeconds = std::uint32_t{30},
         };
 
         AsterKV::Server::TcpServerRuntime runtime{options};
 
         return expectEqual(runtime.endpoint().host, "127.0.0.1") &&
                expectEqual(runtime.endpoint().port, std::uint16_t{17721}) &&
-               expectEqual(runtime.options().maxClientWorkers, std::size_t{16});
+               expectEqual(runtime.options().maxClientWorkers, std::size_t{16}) &&
+               expectEqual(runtime.options().clientIdleTimeoutSeconds, std::uint32_t{30});
     }
 
     [[nodiscard]] bool testSignalShutdownControllerCanResetStopState() {
