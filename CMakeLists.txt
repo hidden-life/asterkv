@@ -29,6 +29,7 @@ add_subdirectory(src/protocol)
 add_subdirectory(src/pipeline)
 add_subdirectory(src/network)
 add_subdirectory(src/server)
+add_subdirectory(src/config)
 
 add_subdirectory(apps/asterd)
 add_subdirectory(apps/astercli)

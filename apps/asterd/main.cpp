@@ -3,7 +3,6 @@
 #include <iostream>
 #include <string_view>
 #include <csignal>
-#include <cstring>
 
 #include <asterkv/network/tcp_server.h>
 #include <asterkv/pipeline/local_pipeline.h>
@@ -11,6 +10,7 @@
 #include <asterkv/core/version.h>
 #include <asterkv/server/tcp_server_options.h>
 #include <asterkv/server/tcp_server_runtime.h>
+#include <asterkv/config/server_config.h>
 
 namespace {
     void printUsage(std::string_view execName) {
@@ -18,7 +18,8 @@ namespace {
             << "Usage: " << execName << " [--version] [--help]\n"
             << "       " << execName << " --local\n"
             << "       " << execName << " --local <command>\n"
-            << "       " << execName << " --listen <host:port> [--max-clients <count>] [--idle-timeout <seconds>]\n\n"
+            << "       " << execName << " --listen <host:port> [--max-clients <count>] [--idle-timeout <seconds>]\n"
+            << "       " << execName << " --config <path>\n\n"
             << "AsterKV server daemon.\n\n"
             << "Options:\n"
             << "    --version                   Print version information.\n"
@@ -26,13 +27,15 @@ namespace {
             << "    --local                     Run local stdin command mode without TCP networking\n"
             << "    --listen <host:port>        Run blocking sequential TCP line server until Ctrl+C\n"
             << "    --max-clients <count>       Limit active TCP client workers\n"
-            << "    --idle-timeout <seconds>    Close idle TCP clients after timeout\n\n"
+            << "    --idle-timeout <seconds>    Close idle TCP clients after timeout\n"
+            << "    --config <path>             Load server options from config file\n\n"
             << "Examples:\n"
             << "  " << execName << " --local PING\n"
             << "  " << execName << " --local \"SET username alex\"\n"
             << "  printf 'PING'\\n | " << execName << " --local\n"
             << " " << execName << " --listen 127.0.0.1:" << AsterKV::Network::defaultClientPort << '\n'
             << " " << execName << " --listen 127.0.0.1:" << AsterKV::Network::defaultClientPort << " --max-clients 128 --idle timeout 300\n"
+            << " " << execName << " --config config/asterd.conf\n"
         ;
     }
 
@@ -222,6 +225,23 @@ namespace {
 
         return runListenMode(options);
     }
+
+    int runConfigModeFromArguments(int argc, char **argv) {
+        if (argc != 3) {
+            std::cerr << "--config requires <path>\n";
+
+            return EXIT_FAILURE;
+        }
+
+        auto options = AsterKV::Config::loadServerConfig(argv[2]);
+        if (options.isError()) {
+            std::cerr << "Config error: " << options.status().codeString() << ' ' << options.status().message() << '\n';
+
+            return EXIT_FAILURE;
+        }
+
+        return runListenMode(options.value());
+    }
 }
 
 int main(const int argc, char **argv) {
@@ -253,6 +273,10 @@ int main(const int argc, char **argv) {
 
     if (argument == "--listen") {
         return runListenModeFromArguments(argc, argv);
+    }
+
+    if (argument == "--config") {
+        return runConfigModeFromArguments(argc, argv);
     }
 
     std::cerr << "Unknown argument: " << argument << std::endl;

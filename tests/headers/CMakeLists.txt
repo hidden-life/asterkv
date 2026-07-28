@@ -13,6 +13,7 @@ target_link_libraries(asterkv_public_headers_test
         AsterKV::Pipeline
         AsterKV::Network
         AsterKV::Server
+        AsterKV::Config
 )
 
 asterkvApplyCompilerOptions(asterkv_public_headers_test)

@@ -96,6 +96,13 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added `asterd --idle-timeout <seconds>` for TCP listen mode.
 - Added TCP idle timeout integration smoke test.
 - Added TCP idle timeout architecture documentation and ADR.
+- Added the `AsterKV::Config` module.
+- Added line-based server configuration parsing.
+- Added server configuration file loading.
+- Added `asterd --config <path>`.
+- Added example `config/asterd.conf`.
+- Added configuration parser tests.
+- Added server configuration file architecture documentation and ADR.
 
 ### Changed
 - Aligned C++ naming conventions:
