@@ -40,6 +40,7 @@ target_link_libraries(asterkv_network
         PUBLIC
             AsterKV::Core
             AsterKV::Pipeline
+            AsterKV::Logging
 
             Threads::Threads
 )

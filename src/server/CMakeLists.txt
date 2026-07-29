@@ -37,6 +37,7 @@ target_link_libraries(asterkv_server
             AsterKV::Network
             AsterKV::Pipeline
             AsterKV::Storage
+            AsterKV::Logging
 )
 
 asterkvApplyCompilerOptions(asterkv_server)

@@ -13,6 +13,7 @@
 #include <asterkv/core/result.h>
 #include <asterkv/pipeline/local_pipeline.h>
 #include <asterkv/network/tcp_endpoint.h>
+#include <asterkv/logging/logger.h>
 
 namespace AsterKV::Network {
     namespace {
@@ -64,6 +65,22 @@ namespace AsterKV::Network {
 
         [[nodiscard]] bool isStopRequested(TcpLineServer::StopRequestedCallback stopRequested) noexcept {
             return stopRequested != nullptr && stopRequested();
+        }
+
+        void logDebug(std::string_view message) {
+            Logging::debug(message);
+        }
+
+        void logInfo(std::string_view message) {
+            Logging::info(message);
+        }
+
+        void logWarn(std::string_view message) {
+            Logging::warn(message);
+        }
+
+        void logError(std::string_view message) {
+            Logging::error(message);
         }
 
         enum class AcceptClientResultType {
@@ -256,6 +273,8 @@ namespace AsterKV::Network {
                         }
 
                         if (isClientIdleTimedOut(options, lastActivity)) {
+                            logInfo("closing idle TCP client connection");
+
                             return Core::Status::ok();
                         }
 
@@ -412,6 +431,8 @@ namespace AsterKV::Network {
         }
 
         void rejectClientBecauseLimitReached(int clientFd, TcpLineServer::StopRequestedCallback stopRequested) {
+            logWarn("rejecting TCP client because maximum client worker limit was reached");
+
             static_cast<void>(sendAll(clientFd, clientLimitResponse, stopRequested));
         }
     }
@@ -450,11 +471,16 @@ namespace AsterKV::Network {
 
     Core::Status TcpLineServer::run(StopRequestedCallback stopRequested) {
         Core::Status optionsStatus = validateOptions(options_);
+
+        logInfo("starting TCP line server accept loop");
+
         if (!optionsStatus.isOk()) {
             return optionsStatus;
         }
 
         Core::Result<UniqueFd> serverFd = createListeningSocket(endpoint_);
+
+        logInfo("TCP line server is ready to accept clients");
 
         if (serverFd.isError()) {
             return serverFd.status();
@@ -468,12 +494,16 @@ namespace AsterKV::Network {
             joinFinishedClientWorkers(workers);
 
             AcceptClientResult clientResult = acceptClient(listeningSocket.get(), stopRequested);
+            logInfo("accepted TCP client connection");
             if (clientResult.type == AcceptClientResultType::Stopped) {
+                logInfo("TCP line server accept loop stop requested");
                 break;
             }
 
             if (clientResult.type == AcceptClientResultType::Failed) {
                 joinClientWorkers(workers);
+
+                logInfo("TCP line server accept loop failed");
 
                 return clientResult.status;
             }
@@ -498,13 +528,22 @@ namespace AsterKV::Network {
                             &activeClientWorkers,
                             finished
                         ]() mutable {
+                            logDebug("TCP client worker started");
+
                             try {
-                                static_cast<void>(serveClient(clientFd.get(), pipeline, options, stopRequested));
-                            } catch (...) {}
+                                Core::Status clientStatus = serveClient(clientFd.get(), pipeline, options, stopRequested);
+                                if (!clientStatus.isOk()) {
+                                    logWarn("TCP client worker finished with non-OK status");
+                                }
+                            } catch (...) {
+                                logError("TCP client worker terminated with unhandled exception");
+                            }
 
                             activeClientWorkers.fetch_sub(1, std::memory_order_relaxed);
 
                             finished->store(true, std::memory_order_relaxed);
+
+                            logDebug("TCP client worker stopped");
                         }
                     ),
                     .finished = finished
@@ -513,6 +552,8 @@ namespace AsterKV::Network {
         }
 
         joinClientWorkers(workers);
+
+        logInfo("TCP line server accept loop stopped");
 
         return Core::Status::ok();
     }
