@@ -103,6 +103,13 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added example `config/asterd.conf`.
 - Added configuration parser tests.
 - Added server configuration file architecture documentation and ADR.
+- Added `spdlog` as the server logging backend.
+- Added the `AsterKV::Logging` module.
+- Added a process-wide logging facade.
+- Added server runtime lifecycle logging.
+- Added TCP accept loop, client rejection, and idle timeout logging.
+- Added logging facade tests.
+- Added server logging documentation and ADR.
 
 ### Changed
 - Aligned C++ naming conventions:
@@ -123,6 +130,7 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Changed TCP client workers to close idle client connections after the configured timeout.
 - Changed `asterd --listen` option parsing to support multiple listen options.
 - Changed `asterd --listen` startup output to include the idle timeout.
+- Kept direct `spdlog` usage behind the `AsterKV::Logging` facade.
 
 ### Fixed
 

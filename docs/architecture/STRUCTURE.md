@@ -29,6 +29,7 @@ src/pipeline    Local in-process command pipeline.
 src/network     TCP endpoint parsing and thread-per-client TCP server.
 src/server      Server runtime options, shutdown handling, and runtime wiring.
 src/config      Server configuration file parsing and loading.
+src/logging     Project logging facade backend by spdlog.
 ```
 
 The core library currently contains:
@@ -89,6 +90,7 @@ tests/network           Network unit-style tests.
 tests/integration       Process-level integration smoke tests.
 tests/server            Server runtime boundary tests.
 tests/config            Configuration parser tests.
+tests/logging           Logging facade tests.
 ```
 
 ## Planned future modules

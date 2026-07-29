@@ -10,6 +10,7 @@ target_link_libraries(asterd
         AsterKV::Network
         AsterKV::Server
         AsterKV::Config
+        AsterKV::Logging
 )
 
 asterkvApplyCompilerOptions(asterd)

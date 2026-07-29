@@ -11,6 +11,7 @@
 #include <asterkv/server/tcp_server_options.h>
 #include <asterkv/server/tcp_server_runtime.h>
 #include <asterkv/config/server_config.h>
+#include <asterkv/logging/logger.h>
 
 namespace {
     void printUsage(std::string_view execName) {
@@ -136,6 +137,13 @@ namespace {
     }
 
     int runListenMode(const AsterKV::Server::TcpServerOptions &options) {
+        AsterKV::Logging::initializeDefaultConsoleLogger(
+            "asterd",
+            AsterKV::Logging::LogLevel::Info
+        );
+
+        AsterKV::Logging::info("starting asterd listen mode");
+
         AsterKV::Server::TcpServerRuntime runtime {options};
 
         std::cout << "AsterKV listening on " << AsterKV::Network::tcpEndpointToString(runtime.endpoint()) << '\n'
@@ -145,12 +153,19 @@ namespace {
 
         AsterKV::Core::Status status = runtime.run();
         if (!status.isOk()) {
+            AsterKV::Logging::error("asterd listen mode failed");
             std::cerr << "TCP server failed: " << status.codeString() << ' ' << status.message() << '\n';
+
+            AsterKV::Logging::shutdownLogging();
 
             return EXIT_FAILURE;
         }
 
+        AsterKV::Logging::info("asterd listen mode stopped");
+
         std::cout << "AsterKV server stopped.\n" << std::flush;
+
+        AsterKV::Logging::shutdownLogging();
 
         return EXIT_SUCCESS;
     }

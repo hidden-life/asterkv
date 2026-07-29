@@ -20,6 +20,19 @@ AsterKV uses CMake package discovery for GoogleTest:
 find_package(GTest CONFIG REQUIRED)
 ```
 
+## Logging
+AsterKV uses `spdlog` for server logging.
+
+`spdlog` is treated as an infrastructure dependency.
+
+It must not be used as a replacement for the database core systems that the project
+implements in-house.
+
+Install on Debian:
+```bash
+sudo apt install libspdlog-dev
+```
+
 ## Dependency policy
 Do not add dependencies speculatively.
 

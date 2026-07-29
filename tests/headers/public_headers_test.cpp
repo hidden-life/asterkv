@@ -14,6 +14,7 @@
 #include <asterkv/server/tcp_server_options.h>
 #include <asterkv/server/tcp_server_runtime.h>
 #include <asterkv/config/server_config.h>
+#include <asterkv/logging/logger.h>
 
 #include <string>
 
@@ -60,6 +61,19 @@ int main() {
     AsterKV::Pipeline::LocalPipeline pipeline{storage};
 
     if (pipeline.processLine("PING") != "+PONG\r\n") {
+        return 1;
+    }
+
+    if (AsterKV::Logging::logLevelToString(AsterKV::Logging::LogLevel::Info) != "info") {
+        return 1;
+    }
+
+    auto parsedLogLevel = AsterKV::Logging::logLevelFromString("warn");
+    if (parsedLogLevel.isError()) {
+        return 1;
+    }
+
+    if (parsedLogLevel.value() != AsterKV::Logging::LogLevel::Warn) {
         return 1;
     }
 

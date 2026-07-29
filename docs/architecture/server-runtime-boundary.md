@@ -51,6 +51,18 @@ asterd --config config/asterd.conf
 
 The server runtime still receives fully parsed options and does not read files directly.
 
+## Logging boundary
+`asterd` initializes the process-wide logging facade before starting the server runtime.
+
+```text
+asterd
+    -> Logging::initializeDefaultConsoleLogger
+    -> TcpServerRuntime
+    -> TcpLineServer
+```
+
+The runtime uses `AsterKV::Logging` and does not call `spdlog` directly.
+
 ## Current limitations
 The current runtime still uses:
 - in-memory storage only;

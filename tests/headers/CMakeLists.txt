@@ -11,6 +11,7 @@ target_link_libraries(asterkv_public_headers_test
         AsterKV::Storage
         AsterKV::Execution
         AsterKV::Pipeline
+        AsterKV::Logging
         AsterKV::Network
         AsterKV::Server
         AsterKV::Config

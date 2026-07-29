@@ -160,6 +160,18 @@ Run `asterd` with the config file:
 ./build/debug/apps/asterd/asterd --config config/asterd.conf
 ```
 
+### Server logging
+`asterd --listen` initializes the default server logger.
+
+Example log line:
+```text
+[2026-01-01 12.00.00.000] [info] [asterd] starting TCP server runtime
+```
+
+AsterKV uses `spdlog` behind the `AsterKV::Logging` facade.
+
+Runtime code should use the facade instead of calling `spdlog` directly.
+
 ## Development principles
 - C++23.
 - Linux-first.
