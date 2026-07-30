@@ -16,6 +16,7 @@
 #include <asterkv/config/server_config.h>
 #include <asterkv/logging/logger.h>
 #include <asterkv/network/tcp_client.h>
+#include <asterkv/client/response_renderer.h>
 
 #include <string>
 
@@ -130,6 +131,16 @@ int main() {
     }
 
     if (clientOptions.maxResponseBytes != AsterKV::Network::defaultTcpClientMaxResponseBytes) {
+        return 1;
+    }
+
+    auto renderedClientResponse = AsterKV::Client::renderPrettyResponseText("+OK\n");
+
+    if (renderedClientResponse.isError()) {
+        return 1;
+    }
+
+    if (renderedClientResponse.value() != "OK\n") {
         return 1;
     }
 

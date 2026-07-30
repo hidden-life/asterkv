@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.25)
 
 project(
         AsterKV
-        VERSION 0.1.0
+        VERSION 0.2.0
         DESCRIPTION "A distributed high-performance key-value database written in modern C++"
         LANGUAGES CXX
 )
@@ -26,6 +26,7 @@ add_subdirectory(src/command)
 add_subdirectory(src/storage)
 add_subdirectory(src/execution)
 add_subdirectory(src/protocol)
+add_subdirectory(src/client)
 add_subdirectory(src/pipeline)
 add_subdirectory(src/logging)
 add_subdirectory(src/network)
