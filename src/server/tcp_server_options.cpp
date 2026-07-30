@@ -11,6 +11,7 @@ namespace AsterKV::Server {
             },
             .maxClientWorkers = Network::defaultMaxClientWorkers,
             .clientIdleTimeoutSeconds = Network::defaultClientIdleTimeoutSeconds,
+            .logLevel = Logging::defaultLogLevel,
         };
     }
 }

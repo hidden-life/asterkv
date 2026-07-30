@@ -92,6 +92,10 @@ int main() {
         return 1;
     }
 
+    if (options.logLevel != AsterKV::Logging::defaultLogLevel) {
+        return 1;
+    }
+
     if (options.clientIdleTimeoutSeconds != AsterKV::Network::defaultClientIdleTimeoutSeconds) {
         return 1;
     }
@@ -104,9 +108,14 @@ int main() {
         "listen = 127.0.0.1:7721\n"
         "max_clients = 128\n"
         "idle_timeout_seconds = 300\n"
+        "log_level = warn\n"
     );
 
     if (parsedConfig.isError()) {
+        return 1;
+    }
+
+    if (parsedConfig.value().logLevel != AsterKV::Logging::LogLevel::Warn) {
         return 1;
     }
 

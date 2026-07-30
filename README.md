@@ -133,6 +133,11 @@ Use both TCP lifecycle options:
 
 Idle clients are disconnected after the configured timeout.
 
+Run with debug logging:
+```bash
+./build/debug/apps/asterd/asterd --listen 127.0.0.1:7721 --log-level debug
+```
+
 Stop the server:
 ```text
 Ctrl+C
@@ -153,6 +158,7 @@ Create a config file:
 listen = 127.0.0.1:7721
 max_clients = 128
 idle_timeout_seconds = 300
+log_level = info
 ```
 
 Run `asterd` with the config file:

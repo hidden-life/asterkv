@@ -8,6 +8,7 @@ AsterKV supports a simple line-based server configuration file.
 listen = 127.0.0.1:7721
 max_clients = 128
 idle_timeout_seconds = 300
+log_level = info
 ```
 
 ## Running with config
@@ -32,6 +33,7 @@ Inline comments are not supported yet.
 listen                      TCP listen endpoint in host:port format.
 max_clients                 Maximum active TCP client workers.
 idle_timeout_seconds        TCP client idle timeout in seconds.
+log_level                   Server log level.
 ```
 
 ## Defaults
@@ -42,6 +44,7 @@ Missing keys use built-in defaults:
 listen = 127.0.0.1:7721
 max_clients = 128
 idle_timeout_seconds = 300
+log_level = info
 ```
 
 ## Current limitations
@@ -53,6 +56,6 @@ The current config format does not support:
 - arrays;
 - nested objects;
 - hot reload;
-- CLI overrides for `--config`.
+- CLI overrides for `--config` are not supported yet.
 
 Those capabilities may be introduced later.

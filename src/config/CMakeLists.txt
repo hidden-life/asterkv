@@ -40,4 +40,5 @@ target_link_libraries(asterkv_config
             AsterKV::Core
             AsterKV::Network
             AsterKV::Server
+            AsterKV::Logging
 )

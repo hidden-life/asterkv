@@ -3,6 +3,7 @@
 
 #include <asterkv/network/tcp_endpoint.h>
 #include <asterkv/network/tcp_server.h>
+#include <asterkv/logging/logger.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -12,6 +13,7 @@ namespace AsterKV::Server {
         Network::TcpEndpoint endpoint;
         std::size_t maxClientWorkers;
         std::uint32_t clientIdleTimeoutSeconds;
+        Logging::LogLevel logLevel;
     };
 
     [[nodiscard]] TcpServerOptions defaultServerOptions();
