@@ -3,7 +3,7 @@
 
 ## Usage
 ```bash
-astercli --connect <host:port> <command>
+astercli --connect <host:port> [command]
 ```
 
 Example:
@@ -48,11 +48,21 @@ For each command, `astercli`:
 
 This simple model is enough for single-command CLI execution.
 
+## REPL mode
+If no command is provided, `astercli` starts TCP REPL mode:
+```bash
+astercli --connect 127.0.0.1:7721
+```
+
+At this stage, REPL mode still uses one TCP connection per command.
+
 ## Current limitations
 The current TCP client does not provide:
-- REPL mode;
 - connection reuse;
 - authentication;
 - TLS;
 - response pretty-printing;
-- custom client timeout CLI options.
+- custom client timeout CLI options;
+- persistent REPL connections;
+- command history;
+- autocompletion.

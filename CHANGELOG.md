@@ -123,6 +123,10 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added single-command TCP execution through `astercli`.
 - Added `astercli` TCP integration smoke test.
 - Added `astercli` TCP client architecture documentation and ADR.
+- Added TCP REPL mode for `astercli --connect <host:port>`.
+- Added `exit` and `quit` commands for TCP REPL mode.
+- Added TCP REPL integration smoke test.
+- Added TCP REPL architecture documentation and ADR.
 
 ### Changed
 - Aligned C++ naming conventions:
@@ -144,6 +148,7 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Changed `asterd --listen` option parsing to support multiple listen options.
 - Changed `asterd --listen` startup output to include the idle timeout.
 - Kept direct `spdlog` usage behind the `AsterKV::Logging` facade.
+- Changed `astercli --connect <host:port>` to start REPL mode instead of failing due to a missing command.
 
 ### Fixed
 

@@ -21,12 +21,58 @@ namespace {
             << "    --help                      Print this help message.\n"
             << "    --local <command>           Execute command against local in-memory pipeline\n"
             << "    --connect <host:port>       Execute command against TCP server\n\n"
+            << "Modes:\n"
+            << "    --connect with command      Execute one TCP command and exit\n"
+            << "    --connect without command   Start TCP REPL mode\n\n"
+            << "REPL commands:\n"
+            << "    exit                        Exit REPL mode\n"
+            << "    quit                        Exit REPL mode\n\n"
             << "Examples:\n"
             << "    " << execName << " --local PING\n"
             << "    " << execName << " --local \"SET username alex\"\n"
             << "    " << execName << " --connect 127.0.0.1:" << AsterKV::Network::defaultClientPort << " PING\n"
             << "    " << execName << " --connect 127.0.0.1:" << AsterKV::Network::defaultClientPort << " SET username alex\n"
+            << "    " << execName << " --connect 127.0.0.1:" << AsterKV::Network::defaultClientPort << '\n'
         ;
+    }
+
+    [[nodiscard]] bool isWhitespace(char value) noexcept {
+        return std::isspace(static_cast<unsigned char>(value)) != 0;
+    }
+
+    [[nodiscard]] std::string_view trim(std::string_view value) noexcept {
+        while (!value.empty() && isWhitespace(value.front())) {
+            value.remove_prefix(1);
+        }
+
+        while (!value.empty() && isWhitespace(value.back())) {
+            value.remove_suffix(1);
+        }
+
+        return value;
+    }
+
+    [[nodiscard]] bool equalsIgnoreCase(std::string_view left, std::string_view right) noexcept {
+        if (left.size() != right.size()) {
+            return false;
+        }
+
+        for (std::size_t index = 0; index < left.size(); ++index) {
+            const char leftCh = static_cast<char>(std::tolower(static_cast<unsigned char>(left[index])));
+            const char rightCh = static_cast<char>(std::tolower(static_cast<unsigned char>(right[index])));
+
+            if (leftCh != rightCh) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    [[nodiscard]] bool isExitCommand(std::string_view cmd) noexcept {
+        const std::string_view trimmed = trim(cmd);
+
+        return equalsIgnoreCase(trimmed, "exit") || equalsIgnoreCase(trimmed, "quit");
     }
 
     [[nodiscard]] std::string joinArguments(int argc, char **argv, int startIdx) {
@@ -69,9 +115,65 @@ namespace {
         return EXIT_SUCCESS;
     }
 
+    int runConnectSingleCommandMode(const AsterKV::Network::TcpEndpoint &endpoint, std::string_view cmd) {
+        AsterKV::Network::TcpLineClient client {endpoint};
+
+        auto response = client.sendCommandLine(cmd);
+        if (response.isError()) {
+            std::cerr << "TCP client error: " << response.status().codeString() << ' ' << response.status().message() << '\n';
+
+            return EXIT_FAILURE;
+        }
+
+        printProtocolResponse(response.value());
+
+        return EXIT_SUCCESS;
+    }
+
+    int runConnectReplMode(const AsterKV::Network::TcpEndpoint &endpoint) {
+        AsterKV::Network::TcpLineClient client {endpoint};
+        bool hadClientError = false;
+
+        std::cout << "AsterKV TCP REPL connected to " << AsterKV::Network::tcpEndpointToString(endpoint) << '\n'
+            << "Type 'exit' or 'quit' to leave.\n"
+        ;
+
+        std::string cmdLine;
+
+        while (true) {
+            std::cout << "asterkv > " << std::flush;
+            if (!std::getline(std::cin, cmdLine)) {
+                std::cout << '\n';
+                break;
+            }
+
+            const std::string_view trimmed = trim(cmdLine);
+            if (trimmed.empty()) {
+                continue;
+            }
+
+            if (isExitCommand(trimmed)) {
+                break;
+            }
+
+            auto response = client.sendCommandLine(trimmed);
+            if (response.isError()) {
+                hadClientError = true;
+
+                std::cerr << "TCP client error: " << response.status().codeString() << ' ' << response.status().message() << '\n';
+                continue;
+            }
+
+            printProtocolResponse(response.value());
+        }
+
+        return hadClientError ? EXIT_FAILURE : EXIT_SUCCESS;
+    }
+
+
     int runConnectMode(int argc, char **argv) {
-        if (argc < 4) {
-            std::cerr << "--connect requires <host:port> <command>\n";
+        if (argc < 3) {
+            std::cerr << "--connect requires <host:port>\n";
 
             return EXIT_FAILURE;
         }
@@ -83,18 +185,13 @@ namespace {
             return EXIT_FAILURE;
         }
 
-        const std::string commandLine = joinArguments(argc, argv, 3);
-        AsterKV::Network::TcpLineClient client {endpoint.value()};
-        auto response = client.sendCommandLine(commandLine);
-        if (response.isError()) {
-            std::cerr << "TCP client error: " << response.status().codeString() << ' ' << response.status().message() << '\n';
-
-            return EXIT_FAILURE;
+        if (argc == 3) {
+            return runConnectReplMode(endpoint.value());
         }
 
-        printProtocolResponse(response.value());
+        const std::string cmdLine = joinArguments(argc, argv, 3);
 
-        return EXIT_SUCCESS;
+        return runConnectSingleCommandMode(endpoint.value(), cmdLine);
     }
 }
 

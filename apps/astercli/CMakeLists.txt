@@ -70,14 +70,4 @@ if (BUILD_TESTING)
             PROPERTIES
                 PASS_REGULAR_EXPRESSION "Invalid connect address"
     )
-
-    add_test(
-            NAME astercli_rejects_missing_connect_command
-            COMMAND /bin/sh -c "\"$<TARGET_FILE:astercli>\" --connect 127.0.0.1:17799 2>&1; test $? -ne 0"
-    )
-
-    set_tests_properties(astercli_rejects_missing_connect_command
-            PROPERTIES
-                PASS_REGULAR_EXPRESSION "--connect requires <host:port> <command>"
-    )
 endif ()

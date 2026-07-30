@@ -92,6 +92,24 @@ The `astercli_tcp_smoke_test` starts `asterd` and uses `astercli --connect` to v
 
 The test validates the real client-server workflow without using `nc` as the command client.
 
+## astercli TCP REPL smoke test
+The `astercli_tcp_repl_smoke_test` starts `asterd` and pipes commands into:
+```bash
+astercli --connect <host:port>
+```
+
+It verifies:
+- REPL startup;
+- `PING`;
+- `SET`;
+- `GET`;
+- `EXISTS`;
+- `DEL`;
+- missing key response;
+- graceful server shutdown.
+
+The REPL currently uses one TCP connection per command.
+
 ## Current limitations
 The smoke test uses a fixed local test port:
 ```text

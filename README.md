@@ -43,8 +43,8 @@ ctest --preset debug
 ## Local CLI mode
 Run a single command locally:
 ```bash
-./build/debug/apps/astercli/astercli local PING
-./build/debug/apps/astercli/astercli local "SET username alex"
+./build/debug/apps/astercli/astercli --local PING
+./build/debug/apps/astercli/astercli --local "SET username alex"
 ```
 
 ## Server local stdin
@@ -69,7 +69,7 @@ Server local mode uses in-memory storage and does not persist data between proce
 
 Start an interactive in-memory local session:
 ```bash
-./build/debug/apps/astercli/astercli local
+./build/debug/apps/astercli/astercli --local
 ```
 
 Example:
@@ -192,6 +192,31 @@ Run commands through `astercli`:
 ```
 
 `astercli` currently prints raw protocol responses.
+
+### TCP REPL
+Start the server:
+```bash
+./build/debug/apps/asterd/asterd --listen 127.0.0.1:7721
+```
+
+Start interactive client:
+```bash
+./build/debug/apps/astercli/astercli --connect 127.0.0.1:7721
+```
+
+Example:
+```text
+asterkv > PING
++PONG
+asterkv > SET username alex
++OK
+asterkv > GET username
+$4
+alex
+asterkv > exit
+```
+
+The REPL currently prints raw protocol responses and opens one TCP connection per command.
 
 ## Development principles
 - C++23.
