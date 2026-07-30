@@ -13,7 +13,7 @@ src/        Source code for internal and public libraries.
 ## Current applications
 ```text
 apps/asterd     Server daemon with local stdin and TCP listen modes.
-apps/astercli   Command-line client with local and single-command TCP execution modes.
+apps/astercli   Command-line client with local execution, single-command TCP mode, and TCP REPL mode.
 apps/asterctl   Administrative control tool.
 ```
 
