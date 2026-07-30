@@ -110,6 +110,13 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added TCP accept loop, client rejection, and idle timeout logging.
 - Added logging facade tests.
 - Added server logging documentation and ADR.
+- Added configurable server log level.
+- Added `Logging::defaultLogLevel`.
+- Added `Server::TcpServerOptions::logLevel`.
+- Added `log_level` support to server config files.
+- Added `asterd --log-level <level>` for TCP listen mode.
+- Added configurable logging option tests.
+- Added configurable logging documentation and ADR.
 
 ### Changed
 - Aligned C++ naming conventions:

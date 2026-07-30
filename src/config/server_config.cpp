@@ -1,7 +1,9 @@
 #include <charconv>
 #include <fstream>
 #include <sstream>
+
 #include <asterkv/config/server_config.h>
+#include <asterkv/logging/logger.h>
 
 namespace AsterKV::Config {
     namespace {
@@ -126,6 +128,20 @@ namespace AsterKV::Config {
                 }
 
                 options.clientIdleTimeoutSeconds = parsed.value();
+
+                return Core::Status::ok();
+            }
+
+            if (key == "log_level") {
+                auto parsed = Logging::logLevelFromString(value);
+                if (parsed.isError()) {
+                    std::string message = "invalid log_level: ";
+                    message.append(parsed.status().message());
+
+                    return makeLineError(lineNumber, message);
+                }
+
+                options.logLevel = parsed.value();
 
                 return Core::Status::ok();
             }

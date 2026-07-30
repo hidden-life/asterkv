@@ -20,6 +20,8 @@ namespace AsterKV::Logging {
         Off,
     };
 
+    constexpr LogLevel defaultLogLevel = LogLevel::Info;
+
     using LoggerPtr = std::shared_ptr<spdlog::logger>;
 
     [[nodiscard]] std::string_view logLevelToString(LogLevel level) noexcept;

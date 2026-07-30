@@ -19,7 +19,7 @@ namespace {
             << "Usage: " << execName << " [--version] [--help]\n"
             << "       " << execName << " --local\n"
             << "       " << execName << " --local <command>\n"
-            << "       " << execName << " --listen <host:port> [--max-clients <count>] [--idle-timeout <seconds>]\n"
+            << "       " << execName << " --listen <host:port> [--max-clients <count>] [--idle-timeout <seconds>] [--log-level <level>]\n"
             << "       " << execName << " --config <path>\n\n"
             << "AsterKV server daemon.\n\n"
             << "Options:\n"
@@ -29,13 +29,14 @@ namespace {
             << "    --listen <host:port>        Run blocking sequential TCP line server until Ctrl+C\n"
             << "    --max-clients <count>       Limit active TCP client workers\n"
             << "    --idle-timeout <seconds>    Close idle TCP clients after timeout\n"
-            << "    --config <path>             Load server options from config file\n\n"
+            << "    --config <path>             Load server options from config file\n"
+            << "    --log-level <level>         Set log level: debug, info, warn, error, critical, off\n\n"
             << "Examples:\n"
             << "  " << execName << " --local PING\n"
             << "  " << execName << " --local \"SET username alex\"\n"
             << "  printf 'PING'\\n | " << execName << " --local\n"
             << " " << execName << " --listen 127.0.0.1:" << AsterKV::Network::defaultClientPort << '\n'
-            << " " << execName << " --listen 127.0.0.1:" << AsterKV::Network::defaultClientPort << " --max-clients 128 --idle timeout 300\n"
+            << " " << execName << " --listen 127.0.0.1:" << AsterKV::Network::defaultClientPort << " --max-clients 128 --idle timeout 300 --log-level info\n"
             << " " << execName << " --config config/asterd.conf\n"
         ;
     }
@@ -139,7 +140,7 @@ namespace {
     int runListenMode(const AsterKV::Server::TcpServerOptions &options) {
         AsterKV::Logging::initializeDefaultConsoleLogger(
             "asterd",
-            AsterKV::Logging::LogLevel::Info
+            options.logLevel
         );
 
         AsterKV::Logging::info("starting asterd listen mode");
@@ -149,6 +150,7 @@ namespace {
         std::cout << "AsterKV listening on " << AsterKV::Network::tcpEndpointToString(runtime.endpoint()) << '\n'
             << "Max client workers: " << runtime.options().maxClientWorkers << '\n'
             << "Client idle timeout seconds: " << runtime.options().clientIdleTimeoutSeconds << '\n'
+            << "Log level: " << AsterKV::Logging::logLevelToString(runtime.options().logLevel) << '\n'
             << "Press Ctrl+C to stop.\n" << std::flush;
 
         AsterKV::Core::Status status = runtime.run();
@@ -229,6 +231,25 @@ namespace {
                 }
 
                 options.clientIdleTimeoutSeconds = parsedIdleTimeout.value();
+                index += 2;
+                continue;
+            }
+
+            if (optionName == "--log-level") {
+                if (index + 1 >= argc) {
+                    std::cerr << "--log-level requires <level>\n";
+
+                    return EXIT_FAILURE;
+                }
+
+                auto parsedLogLevel = AsterKV::Logging::logLevelFromString(argv[index + 1]);
+                if (parsedLogLevel.isError()) {
+                    std::cerr << "Invalid log level: " << parsedLogLevel.status().message() << '\n';
+
+                    return EXIT_FAILURE;
+                }
+
+                options.logLevel = parsedLogLevel.value();
                 index += 2;
                 continue;
             }

@@ -92,6 +92,16 @@ if (BUILD_TESTING)
     )
 
     add_test(
+            NAME asterd_rejects_invalid_log_level
+            COMMAND /bin/sh -c "\"$<TARGET_FILE:asterd>\" --listen 127.0.0.1:17799 --log-level verbose 2>&1; test $? -ne 0"
+    )
+
+    set_tests_properties(asterd_rejects_invalid_log_level
+            PROPERTIES
+            PASS_REGULAR_EXPRESSION "Invalid log level"
+    )
+
+    add_test(
             NAME asterd_rejects_missing_config_file
             COMMAND /bin/sh -c "\"$<TARGET_FILE:asterd>\" --config /tmp/asterkv_missing_config_file.conf 2>&1; test $? -ne 0"
     )

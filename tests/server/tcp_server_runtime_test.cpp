@@ -2,6 +2,7 @@
 #include <asterkv/server/signal_shutdown_controller.h>
 #include <asterkv/server/tcp_server_options.h>
 #include <asterkv/server/tcp_server_runtime.h>
+#include <asterkv/logging/logger.h>
 
 #include <cstdint>
 #include <string>
@@ -24,6 +25,10 @@ namespace {
         return left == right;
     }
 
+    [[nodiscard]] bool expectEqual(AsterKV::Logging::LogLevel left, AsterKV::Logging::LogLevel right) {
+        return left == right;
+    }
+
     [[nodiscard]] bool testCreatesDefaultOptions() {
         const AsterKV::Server::TcpServerOptions options =
             AsterKV::Server::defaultServerOptions();
@@ -32,7 +37,9 @@ namespace {
                expectEqual(options.endpoint.port, AsterKV::Network::defaultClientPort) &&
                expectEqual(options.maxClientWorkers, AsterKV::Network::defaultMaxClientWorkers) &&
                expectEqual(options.clientIdleTimeoutSeconds,
-                           AsterKV::Network::defaultClientIdleTimeoutSeconds);
+                           AsterKV::Network::defaultClientIdleTimeoutSeconds) &&
+                expectEqual(options.logLevel, AsterKV::Logging::defaultLogLevel)
+        ;
     }
 
     [[nodiscard]] bool testRuntimeKeepsConfiguredEndpointAndLimits() {
@@ -43,6 +50,7 @@ namespace {
             },
             .maxClientWorkers = std::size_t{16},
             .clientIdleTimeoutSeconds = std::uint32_t{30},
+            .logLevel = AsterKV::Logging::LogLevel::Debug,
         };
 
         AsterKV::Server::TcpServerRuntime runtime{options};
@@ -50,7 +58,9 @@ namespace {
         return expectEqual(runtime.endpoint().host, "127.0.0.1") &&
                expectEqual(runtime.endpoint().port, std::uint16_t{17721}) &&
                expectEqual(runtime.options().maxClientWorkers, std::size_t{16}) &&
-               expectEqual(runtime.options().clientIdleTimeoutSeconds, std::uint32_t{30});
+               expectEqual(runtime.options().clientIdleTimeoutSeconds, std::uint32_t{30}) &&
+               expectEqual(runtime.options().logLevel, AsterKV::Logging::LogLevel::Debug)
+        ;
     }
 
     [[nodiscard]] bool testSignalShutdownControllerCanResetStopState() {

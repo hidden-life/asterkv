@@ -65,10 +65,22 @@ The TCP server currently logs:
 - accept loop shutdown;
 - runtime shutdown.
 
+## Configurable level
+The server log level is configurable through both CLI listen mode and the server
+configuration file.
+
+CLI example:
+```bash
+asterd --listen 127.0.0.1:7721 --log-level debug
+```
+
+Config example:
+```ini
+log_level = info
+```
+
 ## Current limitations
 The current implementation does not yet support:
-- log level from config;
-- log level from CLI;
 - file sinks;
 - rotation logs;
 - structured fields;
