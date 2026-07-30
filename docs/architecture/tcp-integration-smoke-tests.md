@@ -80,6 +80,18 @@ A second client is initially rejected because the active client worker limit is 
 
 After the idle timeout releases the first worker slot, a later client can connect successfully.
 
+## astercli TCP smoke test
+The `astercli_tcp_smoke_test` starts `asterd` and uses `astercli --connect` to verify:
+- `PING`;
+- `SET`;
+- `GET`;
+- `EXISTS`;
+- `DEL`;
+- missing key response;
+- graceful server shutdown.
+
+The test validates the real client-server workflow without using `nc` as the command client.
+
 ## Current limitations
 The smoke test uses a fixed local test port:
 ```text
