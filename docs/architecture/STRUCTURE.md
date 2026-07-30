@@ -31,6 +31,7 @@ src/network     The network library currently contains TCP endpoint parsing, TCP
 src/server      Server runtime options, shutdown handling, and runtime wiring.
 src/config      Server configuration file parsing and loading.
 src/logging     Project logging facade backend by spdlog.
+src/client      Client-side helpers, including protocol response parsing and rendering.
 ```
 
 The core library currently contains:
@@ -92,6 +93,7 @@ tests/integration       Process-level integration smoke tests.
 tests/server            Server runtime boundary tests.
 tests/config            Configuration parser tests.
 tests/logging           Logging facade tests.
+tests/client            Client module tests.
 ```
 
 ## Planned future modules

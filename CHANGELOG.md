@@ -33,10 +33,17 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added TCP REPL mode for `astercli --connect <host:port>`.
 - Added TCP client/server integration hardening tests.
 - Added release documentation for `v0.1.0`.
+- Started the `0.2.0` client UX milestone.
+- Added the `AsterKV::Client` module.
+- Added protocol response parsing for client-side rendering.
+- Added pretty response rendering foundation.
+- Added client response rendering tests.
+- Added CLI response rendering architecture documentation and ADR.
 
 ### Changed
 - Kept direct `spdlog` usage behind the `AsterKV::Logging` facade.
 - Strengthened TCP client/server integration coverage before the first release.
+- Updated project version to `0.2.0` for the next milestone.
 
 ### Known limitations
 - Storage is in-memory only.
