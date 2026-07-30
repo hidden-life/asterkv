@@ -3,11 +3,12 @@ AsterKV is organized as a modular C++23 project.
 
 ## Top-level layout
 ```text
-apps/       Executable applications.
-cmake/      Reusable CMake modules.
-docs/       Project documentation.
-include/    Public headers.
-src/        Source code for internal and public libraries.
+apps/           Executable applications.
+cmake/          Reusable CMake modules.
+docs/           Project documentation.
+    release/    Release notes, release checklist, and known limitations.
+include/        Public headers.
+src/            Source code for internal and public libraries.
 ```
 
 ## Current applications

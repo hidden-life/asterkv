@@ -5,154 +5,48 @@ AsterKV follows a Semantic Versioning-style release policy using `MAJOR.MINOR.PA
 versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 
 ## Unreleased
+## [0.1.0] - 2026-07-30
 ### Added
-- Added initial repository structure.
-- Added initial standalone binaries:
-  - `asterd`
-  - `astercli`
-  - `asterctl`
-- Added initial core version metadata.
-- Added project coding conventions.
-- Added versioning and release policy documentation.
-- Added `AsterKV::Core::Status` for explicit operation status reporting.
-- Added `AsterKV::Core::Result<T>` for value-or-error return handling.
-- Added GoogleTest-based unit tests for the core status/result model.
-- Added development dependency documentation.
-- Added the `AsterKV::Command` module.
-- Added `CommandType` and `CommandRequest`.
-- Added command name conversion and argument count validation.
-- Added command model tests without additional external dependencies.
-- Added the `AsterKV::Protocol` module.
-- Added line-based command tokenization.
-- Added command line parsing into `AsterKV::Command::CommandRequest`.
-- Added protocol parser tests without additional external dependencies.
-- Added protocol parser architecture documentation and ADR.
-- Added the `AsterKV::Storage` module.
-- Added `StorageEngine` as the storage abstraction.
-- Added `InMemoryStorage` with `set`, `get`, `remove`, and `exists` operations.
-- Added storage tests without additional external dependencies.
-- Added storage foundation architecture documentation and ADR.
-- Added the `AsterKV::Execution` module.
-- Added `CommandResponse` and command response types.
-- Added `CommandDispatcher` for executing command requests against `StorageEngine`.
-- Added execution tests without additional external dependencies.
-- Added command dispatcher architecture documentation and ADR.
-- Added protocol response serialization for command execution results.
-- Added serialization for simple string, bulk string, integer, and error responses.
-- Added execution result serialization through `serializeExecutionResult()`.
-- Added response serialization tests without additional external dependencies.
-- Added response serialization architecture documentation and ADR.
-- Added the `AsterKV::Pipeline` module.
-- Added `LocalPipeline` for in-process command execution.
-- Added end-to-end local pipeline tests for `PING`, `SET`, `GET`, `DEL` and `EXISTS`
-- Added local pipeline architecture documentation and ADR.
-- Added `astercli local` single command execution mode.
-- Added `astercli local` interactive in-memory REPL mode.
-- Added CLI smoke tests for local command execution.
-- Added CLI local mode documentation and ADR.
-- Added `asterd --local` single-command execution mode.
-- Added `asterd --local` stdin-driven local command mode.
-- Added server local mode smoke tests.
-- Added server local stdin mode documentation and ADR.
-- Added the `AsterKV::Netwrok` module.
-- Added TCP endpoint parsing for `host:port` listen addresses.
-- Added blocking single-client TCP line server foundation.
-- Added `asterd --listen <host:port>` TCP listen mode.
-- Added network endpoint tests without additional external dependencies.
-- Added TCP server foundation architecture documentation and ADR.
-- Added blocking TCP accept loop for `asterd --listen`.
-- Added graceful shutdown support for `asterd --listen` through SIGINT and SIGTERM.
-- Added server-side stop callback support to `TcpLineServer`.
-- Added missing-listen-address smoke test for `asterd --listen`.
-- Added TCP accept loop architecture documentation and ADR.
-- Added optional integration test registration through `ASTERKV_BUILD_INTEGRATION_TESTS`.
-- Added TCP server integration smoke test for `asterd --listen`.
-- Added process-level TCP checks for `PING`, `SET`, `GET`, `EXISTS`, and `DEL`.
-- Added TCP smoke test coverage for shared in-memory state across multiple clients.
-- Added TCP graceful shutdown smoke test through `SIGTERM`.
-- Added TCP integration smoke test documentation and ADR.
-- Added the `AsterKV::Server` module.
-- Added `TcpServerOptions` for server runtime configuration.
-- Added `SignalShutdownController` for SIGINT/SIGTERM shutdown state.
-- Added `TcpServerRuntime` for writing in-memory storage, local pipeline, and TCP serving.
-- Added server runtime boundary tests.
-- Added server runtime architecture documentation and ADR.
-- Added thread-per-client TCP serving in `TcpLineServer::run()`.
-- Added client socket receive/send timeouts for shutdown-aware worker threads.
-- Added concurrent TCP client coverage to the integration smoke test.
-- Added mutex protection to `InMemoryStorage`.
-- Added storage concurrency test coverage.
-- Added TCP client worker thread architecture documentation and ADR.
-- Added `Network::TcpLineServerOptions`.
-- Added default active TCP client worker limit.
-- Added `Server::TcpServerOptions::maxClientWorkers`.
-- Added `asterd --max-clients <count>` for TCP listen mode.
-- Added TCP client limit rejection response.
-- Added TCP client limit integration smoke test.
-- Added TCP client lifecycle limits documentation and ADR.
-- Added default TCP client idle timeout configuration.
-- Added `Network::TcpLineServerOptions::clientIdleTimeoutSeconds`.
-- Added `Server::TcpServerOptions::clientIdleTimeoutSeconds`.
-- Added `asterd --idle-timeout <seconds>` for TCP listen mode.
-- Added TCP idle timeout integration smoke test.
-- Added TCP idle timeout architecture documentation and ADR.
-- Added the `AsterKV::Config` module.
-- Added line-based server configuration parsing.
-- Added server configuration file loading.
-- Added `asterd --config <path>`.
-- Added example `config/asterd.conf`.
-- Added configuration parser tests.
-- Added server configuration file architecture documentation and ADR.
-- Added `spdlog` as the server logging backend.
-- Added the `AsterKV::Logging` module.
-- Added a process-wide logging facade.
-- Added server runtime lifecycle logging.
-- Added TCP accept loop, client rejection, and idle timeout logging.
-- Added logging facade tests.
-- Added server logging documentation and ADR.
+- Added initial project bootstrap.
+- Added project conventions and versioning policy.
+- Added core `Status` and `Result<T>` foundations.
+- Added command model foundation.
+- Added protocol tokenizer and parser foundation.
+- Added in-memory storage foundation.
+- Added command dispatcher foundation.
+- Added protocol response serialization foundation.
+- Added local command pipeline.
+- Added `astercli --local <command>`.
+- Added `asterd --local` mode.
+- Added TCP endpoint parsing.
+- Added TCP line server foundation.
+- Added TCP accept loop with graceful shutdown.
+- Added TCP integration smoke tests.
+- Added TCP client worker threads.
+- Added TCP client worker limits.
+- Added TCP idle client timeout.
+- Added server configuration file support.
+- Added `spdlog`-backed logging facade.
 - Added configurable server log level.
-- Added `Logging::defaultLogLevel`.
-- Added `Server::TcpServerOptions::logLevel`.
-- Added `log_level` support to server config files.
-- Added `asterd --log-level <level>` for TCP listen mode.
-- Added configurable logging option tests.
-- Added configurable logging documentation and ADR.
-- Added `Network::TcpLineClient`;
-- Added TCP client socket I/O timeout defaults.
+- Added TCP client foundation.
 - Added `astercli --connect <host:port> <command>`.
-- Added single-command TCP execution through `astercli`.
-- Added `astercli` TCP integration smoke test.
-- Added `astercli` TCP client architecture documentation and ADR.
 - Added TCP REPL mode for `astercli --connect <host:port>`.
-- Added `exit` and `quit` commands for TCP REPL mode.
-- Added TCP REPL integration smoke test.
-- Added TCP REPL architecture documentation and ADR.
-- Added config-based TCP smoke test using `asterd --config` and `astercli --connect`.
-- Added TCP protocol error smoke test through `astercli`.
-- Added integration hardening documentation and ADR.
+- Added TCP client/server integration hardening tests.
+- Added release documentation for `v0.1.0`.
 
 ### Changed
-- Aligned C++ naming conventions:
-  - namespaces use PascalCase;
-  - functions use lowerCamelCase;
-  - variables use lowerCamelCase;
-  - headers use `.h`.
-- Changed `asterd --listen` from one-client execution to a long-running sequential server loop.
-- Updated manual TCP testing examples to use `nc -q 1`.
-- Moved `asterd --listen` signal handling from `apps/asterd` into the server runtime layer.
-- Simplified `apps/asterd/main.cpp` by delegating TCP server lifecycle to `TcpServerRuntime`.
-- Cleaned up `TcpLineServer::runOnce()` file descriptor lifetime handling.
-- Changed `asterd --listen` from sequential client serving to thread-per-client serving.
-- Changed `LocalPipeline::processLine()` to be const.
-- Changed `CommandDispatcher::dispatch()` to be const.
-- Changed `TcpLineServer` construction to accept TCP line server options.
-- Changed `asterd --listen` startup output to include the max client worker count.
-- Changed TCP client workers to close idle client connections after the configured timeout.
-- Changed `asterd --listen` option parsing to support multiple listen options.
-- Changed `asterd --listen` startup output to include the idle timeout.
 - Kept direct `spdlog` usage behind the `AsterKV::Logging` facade.
-- Changed `astercli --connect <host:port>` to start REPL mode instead of failing due to a missing command.
 - Strengthened TCP client/server integration coverage before the first release.
+
+### Known limitations
+- Storage is in-memory only.
+- No WAL.
+- No persistence.
+- No replication.
+- No Raft.
+- No authentication.
+- No TLS.
+- No production performance claims.
 
 ### Fixed
 
