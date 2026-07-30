@@ -117,6 +117,12 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added `asterd --log-level <level>` for TCP listen mode.
 - Added configurable logging option tests.
 - Added configurable logging documentation and ADR.
+- Added `Network::TcpLineClient`;
+- Added TCP client socket I/O timeout defaults.
+- Added `astercli --connect <host:port> <command>`.
+- Added single-command TCP execution through `astercli`.
+- Added `astercli` TCP integration smoke test.
+- Added `astercli` TCP client architecture documentation and ADR.
 
 ### Changed
 - Aligned C++ naming conventions:

@@ -15,6 +15,7 @@
 #include <asterkv/server/tcp_server_runtime.h>
 #include <asterkv/config/server_config.h>
 #include <asterkv/logging/logger.h>
+#include <asterkv/network/tcp_client.h>
 
 #include <string>
 
@@ -120,6 +121,15 @@ int main() {
     }
 
     if (parsedConfig.value().endpoint.port != AsterKV::Network::defaultClientPort) {
+        return 1;
+    }
+
+    AsterKV::Network::TcpLineClientOptions clientOptions {};
+    if (clientOptions.ioTimeoutSeconds != AsterKV::Network::defaultTcpClientIOTimeoutSeconds) {
+        return 1;
+    }
+
+    if (clientOptions.maxResponseBytes != AsterKV::Network::defaultTcpClientMaxResponseBytes) {
         return 1;
     }
 

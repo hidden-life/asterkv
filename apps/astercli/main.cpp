@@ -1,29 +1,31 @@
-#include <asterkv/core/version.h>
 #include <cstdlib>
 #include <sstream>
 #include <iostream>
 #include <string_view>
 
-#include "asterkv/pipeline/local_pipeline.h"
-#include "asterkv/storage/in_memory_storage.h"
+#include <asterkv/core/version.h>
+#include <asterkv/network/tcp_endpoint.h>
+#include <asterkv/pipeline/local_pipeline.h>
+#include <asterkv/storage/in_memory_storage.h>
+#include <asterkv/network/tcp_client.h>
 
 namespace {
     void printUsage(std::string_view execName) {
         std::cout
             << "Usage: " << execName << " [--version] [--help]\n"
-            << "       " << execName << " local\n"
-            << "       " << execName << " local <command>\n\n"
-            << "AsterKV user CLI.\n\n"
+            << "       " << execName << " --local <command>\n"
+            << "       " << execName << " --connect <host:port> <command>\n\n"
+            << "AsterKV command-line client.\n\n"
             << "Options:\n"
-            << "    --version       Print version information.\n"
-            << "    --help          Print this help message.\n"
-            << "Commands:\n"
-            << "    local           Start local in-memory REPL\n"
-            << "    local <command> Execute one command locally\n\n"
+            << "    --version                   Print version information.\n"
+            << "    --help                      Print this help message.\n"
+            << "    --local <command>           Execute command against local in-memory pipeline\n"
+            << "    --connect <host:port>       Execute command against TCP server\n\n"
             << "Examples:\n"
-            << "    " << execName << " local\n"
-            << "    " << execName << " local PING\n"
-            << "    " << execName << " local \"SET username alex\"\n"
+            << "    " << execName << " --local PING\n"
+            << "    " << execName << " --local \"SET username alex\"\n"
+            << "    " << execName << " --connect 127.0.0.1:" << AsterKV::Network::defaultClientPort << " PING\n"
+            << "    " << execName << " --connect 127.0.0.1:" << AsterKV::Network::defaultClientPort << " SET username alex\n"
         ;
     }
 
@@ -49,59 +51,54 @@ namespace {
         }
     }
 
-    int runLocalSingleCommand(int argc, char **argv) {
+    int runLocalMode(int argc, char **argv) {
+        if (argc < 3) {
+            std::cerr << "--local requires <command>\n";
+
+            return EXIT_FAILURE;
+        }
+
         AsterKV::Storage::InMemoryStorage storage;
         AsterKV::Pipeline::LocalPipeline pipeline {storage};
 
-        const std::string cmdLine = joinArguments(argc, argv, 2);
-        const std::string response = pipeline.processLine(cmdLine);
+        const std::string commandLine = joinArguments(argc, argv, 2);
+        const std::string response = pipeline.processLine(commandLine);
 
         printProtocolResponse(response);
 
         return EXIT_SUCCESS;
     }
 
-    int runLocalRepl() {
-        AsterKV::Storage::InMemoryStorage storage;
-        AsterKV::Pipeline::LocalPipeline pipeline {storage};
+    int runConnectMode(int argc, char **argv) {
+        if (argc < 4) {
+            std::cerr << "--connect requires <host:port> <command>\n";
 
-        std::cout << "AsterKV local mode " << AsterKV::Core::versionString() << '\n';
-        std::cout << "Type commands or 'quit' to exit.\n";
-
-        std::string line;
-
-        while (true) {
-            std::cout << "> ";
-
-            if (!std::getline(std::cin, line)) {
-                std::cout << '\n';
-                return EXIT_SUCCESS;
-            }
-
-            if (line == "quit" || line == "exit") {
-                return EXIT_SUCCESS;
-            }
-
-            if (line.empty()) {
-                continue;
-            }
-
-            const std::string response = pipeline.processLine(line);
-
-            printProtocolResponse(response);
-        }
-    }
-
-    int runLocalMode(int argc, char **argv) {
-        if (argc == 2) {
-            return runLocalRepl();
+            return EXIT_FAILURE;
         }
 
-        return runLocalSingleCommand(argc, argv);
+        auto endpoint = AsterKV::Network::parseTcpEndpoint(argv[2]);
+        if (endpoint.isError()) {
+            std::cerr << "Invalid connect address: " << endpoint.status().message() << '\n';
+
+            return EXIT_FAILURE;
+        }
+
+        const std::string commandLine = joinArguments(argc, argv, 3);
+        AsterKV::Network::TcpLineClient client {endpoint.value()};
+        auto response = client.sendCommandLine(commandLine);
+        if (response.isError()) {
+            std::cerr << "TCP client error: " << response.status().codeString() << ' ' << response.status().message() << '\n';
+
+            return EXIT_FAILURE;
+        }
+
+        printProtocolResponse(response.value());
+
+        return EXIT_SUCCESS;
     }
 }
 
-int main(const int argc, char **argv) {
+int main(int argc, char **argv) {
     const std::string_view execName = argc > 0 ? argv[0] : "astercli";
 
     if (argc == 1) {
@@ -113,7 +110,7 @@ int main(const int argc, char **argv) {
     const std::string_view argument = argv[1];
 
     if (argument == "--version") {
-        std::cout << AsterKV::Core::projectName() << " cli " << AsterKV::Core::versionString() << std::endl;
+        std::cout << AsterKV::Core::projectName() << " CLI " << AsterKV::Core::versionString() << '\n';
 
         return EXIT_SUCCESS;
     }
@@ -124,8 +121,12 @@ int main(const int argc, char **argv) {
         return EXIT_SUCCESS;
     }
 
-    if (argument == "local") {
+    if (argument == "--local") {
         return runLocalMode(argc, argv);
+    }
+
+    if (argument == "--connect") {
+        return runConnectMode(argc, argv);
     }
 
     std::cerr << "Unknown argument: " << argument << std::endl;

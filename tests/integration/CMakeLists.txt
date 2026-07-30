@@ -60,3 +60,27 @@ elseif (ASTERKV_REQUIRE_TEST_DEPENDENCIES)
 else ()
     message(STATUS "TCP integration smoke test disabled because 'nc' or 'timeout' was not found.")
 endif ()
+
+if (ASTERKV_TIMEOUT_EXECUTABLE)
+    add_test(
+            NAME astercli_tcp_smoke_test
+            COMMAND
+                /bin/sh
+                "${CMAKE_CURRENT_SOURCE_DIR}/astercli_tcp_smoke_test.sh"
+                "$<TARGET_FILE:asterd>"
+                "$<TARGET_FILE:astercli>"
+                "${ASTERKV_TIMEOUT_EXECUTABLE}"
+                "127.0.0.1"
+                "17724"
+    )
+
+    set_tests_properties(astercli_tcp_smoke_test
+            PROPERTIES
+                LABELS "integration;network;cli"
+                TIMEOUT 30
+    )
+elseif (ASTERKV_REQUIRE_TEST_DEPENDENCIES)
+    message(FATAL_ERROR "astercli TCP integration test requires 'timeout'.")
+else ()
+    message(STATUS "astercli TCP integration smoke test disabled because 'timeout' was not found.")
+endif ()

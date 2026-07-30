@@ -13,7 +13,7 @@ src/        Source code for internal and public libraries.
 ## Current applications
 ```text
 apps/asterd     Server daemon with local stdin and TCP listen modes.
-apps/astercli   User-facing CLI with local in-process execution mode.
+apps/astercli   Command-line client with local and single-command TCP execution modes.
 apps/asterctl   Administrative control tool.
 ```
 
@@ -26,7 +26,7 @@ src/storage     Storage engine interface and in-memory implementation.
 src/execution   Command dispatching and response model.
 src/protocol    Protocol tokenizer/parser and response serialization.
 src/pipeline    Local in-process command pipeline.
-src/network     TCP endpoint parsing and thread-per-client TCP server.
+src/network     The network library currently contains TCP endpoint parsing, TCP line server, and TCP cline client foundations.
 src/server      Server runtime options, shutdown handling, and runtime wiring.
 src/config      Server configuration file parsing and loading.
 src/logging     Project logging facade backend by spdlog.

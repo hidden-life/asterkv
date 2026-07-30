@@ -178,6 +178,21 @@ AsterKV uses `spdlog` behind the `AsterKV::Logging` facade.
 
 Runtime code should use the facade instead of calling `spdlog` directly.
 
+### TCP client
+Start the server:
+```bash
+./build/debug/apps/asterd/asterd --listen 127.0.0.1:7721
+```
+
+Run commands through `astercli`:
+```bash
+./build/debug/apps/astercli/astercli --connect 127.0.0.1:7721 PING
+./build/debug/apps/astercli/astercli --connect 127.0.0.1:7721 SET username alex
+./build/debug/apps/astercli/astercli --connect 127.0.0.1:7721 GET username
+```
+
+`astercli` currently prints raw protocol responses.
+
 ## Development principles
 - C++23.
 - Linux-first.
