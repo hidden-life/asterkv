@@ -110,6 +110,27 @@ It verifies:
 
 The REPL currently uses one TCP connection per command.
 
+## Config-based TCP smoke test
+The `asterd_config_tcp_smoke_test` starts `asterd` through a temporary config file.
+
+It verifies that the server uses:
+- configured listen endpoint;
+- configured idle timeout;
+- configured max client worker limit;
+- configured log level.
+
+Then it sends commands through `astercli --connect`.
+
+## TCP error smoke test
+The `astercli_tcp_error_smoke_test` sends protocol-level failing commands through
+`astercli`.
+
+It verifies:
+- unknown command response;
+- missing key response;
+- server health after protocol errors;
+- graceful shutdown.
+
 ## Current limitations
 The smoke test uses a fixed local test port:
 ```text

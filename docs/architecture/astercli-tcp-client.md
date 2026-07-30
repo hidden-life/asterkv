@@ -56,6 +56,19 @@ astercli --connect 127.0.0.1:7721
 
 At this stage, REPL mode still uses one TCP connection per command.
 
+## Error responses
+Protocol-level command errors are printed as raw protocol response.
+
+Examples:
+```text
+-ERR invalid_argument unknown command
+-ERR not_found key not found
+```
+
+These responses do not mean that `astercli` failed to connect.
+
+They mean that the server processed the command and returned a protocol-level error.
+
 ## Current limitations
 The current TCP client does not provide:
 - connection reuse;

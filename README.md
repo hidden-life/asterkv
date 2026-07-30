@@ -152,6 +152,16 @@ The examples use `nc -q 1` so netcat closes the client connection after stdin re
 This matters because the current TCP server is sequential and serves one connected
 client at a time.
 
+Protocol-level errors are printed as raw responses.
+```bash
+./build/debug/apps/astercli/astercli --connect 127.0.0.1:7721 GET missing_key
+```
+
+Example response:
+```text
+-ERR not_found key not found
+```
+
 ### Server configuration file
 Create a config file:
 ```ini
