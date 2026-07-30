@@ -13,6 +13,57 @@ The long-term goal is to combine Redis-like speed with etcd-like reliability:
 ## Repository
 `github.com/hidden-life/asterkv`
 
+## Quickstart
+Build AsterKV:
+```bash
+rm -rf build/debug
+
+cmake --preset debug
+cmake --build --preset debug
+```
+
+Start the server:
+```bash
+./build/debug/apps/asterd/asterd \
+    --listen 127.0.0.1:7721 \
+    --max-clients 8 \
+    --idle-timeout 30 \
+    --log-level warn
+```
+
+Run a TCP command:
+```bash
+./build/debug/apps/astercli/astercli --connect 127.0.0.1:7721 PING
+```
+
+Expected response:
+```text
++PONG
+```
+
+Store and read a value:
+```bash
+./build/debug/apps/astercli/astercli --connect 127.0.0.1:7721 SET username alex
+./build/debug/apps/astercli/astercli --connect 127.0.0.1:7721 GET username
+```
+
+Expected responses:
+```text
++OK
+$4
+alex
+```
+
+Start TCP REPL:
+```bash
+./build/debug/apps/astercli/astercli --connect 127.0.0.1:7721
+```
+
+Run tests:
+```bash
+ctest --preset debug --output-on-failure
+```
+
 ## Initial binaries
 | Binary | Purpose |
 | --- | ---|
@@ -227,6 +278,26 @@ asterkv > exit
 ```
 
 The REPL currently prints raw protocol responses and opens one TCP connection per command.
+
+## v0.1.0 scope
+AsterKV v0.1.0 is the first runnable single-node foundation release.
+
+It includes:
+- `asterd`;
+- `astercli`;
+- TCP server foundation;
+- TCP client foundation;
+- custom line-based protocol foundation;
+- in-memory storage;
+- command pipeline;
+- server config file support;
+- configurable logging;
+- integration smoke tests.
+
+See:
+- `docs/release/v0.1.0.md`;
+- `docs/release/v0.1.0-checklist.md`;
+- `docs/release/known-limitations.md`.
 
 ## Development principles
 - C++23.
