@@ -39,11 +39,17 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added pretty response rendering foundation.
 - Added client response rendering tests.
 - Added CLI response rendering architecture documentation and ADR.
+- Added pretty output integration for `astercli`.
+- Added human-readable CLI output for local command mode.
+- Added human-readable CLI output for TCP single-command mode.
+- Added human-readable CLI output for TCP REPL mode.
+- Added documentation and ADR for pretty CLI output by default.
 
 ### Changed
 - Kept direct `spdlog` usage behind the `AsterKV::Logging` facade.
 - Strengthened TCP client/server integration coverage before the first release.
 - Updated project version to `0.2.0` for the next milestone.
+- Changed `astercli` to print pretty responses by default instead of raw protocol responses.
 
 ### Known limitations
 - Storage is in-memory only.

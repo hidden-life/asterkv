@@ -8,6 +8,7 @@ target_link_libraries(astercli
         AsterKV::Pipeline
         AsterKV::Storage
         AsterKV::Network
+        AsterKV::Client
 )
 
 asterkvApplyCompilerOptions(astercli)
@@ -26,7 +27,7 @@ if (BUILD_TESTING)
     set_tests_properties(
             astercli_local_ping
             PROPERTIES
-                PASS_REGULAR_EXPRESSION "\\+PONG"
+                PASS_REGULAR_EXPRESSION "PONG"
     )
 
     add_test(
@@ -37,7 +38,7 @@ if (BUILD_TESTING)
     set_tests_properties(
             astercli_local_set
             PROPERTIES
-                PASS_REGULAR_EXPRESSION "\\+OK"
+                PASS_REGULAR_EXPRESSION "OK"
     )
 
     add_test(
@@ -48,7 +49,7 @@ if (BUILD_TESTING)
     set_tests_properties(
             astercli_local_unknown_command
             PROPERTIES
-                PASS_REGULAR_EXPRESSION "-ERR invalid_argument unknown command"
+                PASS_REGULAR_EXPRESSION "error: invalid_argument unknown command"
     )
 
     add_test(

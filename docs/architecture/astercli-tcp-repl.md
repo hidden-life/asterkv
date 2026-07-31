@@ -17,11 +17,10 @@ Example session:
 AsterKV TCP REPL connected to 127.0.0.1:7721
 Type 'exit' or 'quit' to leave.
 asterkv > PING
-+PONG
+PONG
 asterkv > SET username alex
-+OK
+OK
 asterkv > GET username
-$4
 alex
 asterkv > quit
 ```
@@ -39,7 +38,7 @@ The commands are case-insensitive.
 Empty lines are ignored.
 
 ## Protocol output
-At this stage, the REPL prints raw protocol responses.
+The REPL prints human-readable responses by default.
 
 Pretty response rendering is intentionally deferred.
 

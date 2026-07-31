@@ -24,19 +24,19 @@ Send commands:
 ```
 
 ## Protocol output
-At this stage, `astercli` prints raw protocol responses.
+`astercli` intentionally prints human-readable output by default.
 
 Examples:
 ```text
-+PONG
-+OK
-$4
+PONG
+OK
 alex
-:1
--ERR not_found key not found
+1
+error: not_found key not found
 ```
 
-Pretty response rendering is intentionally deferred.
+Raw protocol responses are still tested through lower-level protocol tests and TCP
+smoke tests that use `nc`.
 
 ## Connection model
 For each command, `astercli`:

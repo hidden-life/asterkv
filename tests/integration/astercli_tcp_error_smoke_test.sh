@@ -62,7 +62,7 @@ wait_for_server() {
 
         response="$(run_cli PING 2>/dev/null || true)"
 
-        if printf '%s' "${response}" | grep -F -- "+PONG" >/dev/null; then
+        if printf '%s' "${response}" | grep -F -- "PONG" >/dev/null; then
             return 0
         fi
 
@@ -84,19 +84,19 @@ SERVER_PID="$!"
 wait_for_server
 
 response="$(run_cli NOPE key)"
-assert_contains "${response}" "-ERR invalid_argument unknown command" "unknown command"
+assert_contains "${response}" "error: invalid_argument unknown command" "unknown command"
 
 response="$(run_cli GET missing_key)"
-assert_contains "${response}" "-ERR not_found key not found" "missing key"
+assert_contains "${response}" "error: not_found key not found" "missing key"
 
 response="$(run_cli SET healthy_key healthy_value)"
-assert_contains "${response}" "+OK" "SET after protocol errors"
+assert_contains "${response}" "OK" "SET after protocol errors"
 
 response="$(run_cli GET healthy_key)"
 assert_contains "${response}" "healthy_value" "GET after protocol errors"
 
 response="$(run_cli PING)"
-assert_contains "${response}" "+PONG" "PING after protocol errors"
+assert_contains "${response}" "PONG" "PING after protocol errors"
 
 kill -TERM "${SERVER_PID}" 2>/dev/null || fail "failed to send SIGTERM to server"
 

@@ -74,7 +74,7 @@ wait_for_server() {
 
         response="$(run_single_cli PING 2>/dev/null || true)"
 
-        if printf '%s' "${response}" | grep -F -- "+PONG" >/dev/null; then
+        if printf '%s' "${response}" | grep -F -- "PONG" >/dev/null; then
             return 0
         fi
 
@@ -98,11 +98,11 @@ wait_for_server
 response="$(run_repl_cli)"
 
 assert_contains "${response}" "AsterKV TCP REPL connected to ${HOST}:${PORT}" "REPL startup"
-assert_contains "${response}" "+PONG" "REPL PING"
-assert_contains "${response}" "+OK" "REPL SET username"
+assert_contains "${response}" "PONG" "REPL PING"
+assert_contains "${response}" "OK" "REPL SET username"
 assert_contains "${response}" "jackson" "REPL GET username"
-assert_contains "${response}" ":1" "REPL EXISTS username"
-assert_contains "${response}" "-ERR not_found key not found" "REPL GET deleted username"
+assert_contains "${response}" "1" "REPL EXISTS username"
+assert_contains "${response}" "error: not_found key not found" "REPL GET deleted username"
 
 kill -TERM "${SERVER_PID}" 2>/dev/null || fail "failed to send SIGTERM to server"
 
