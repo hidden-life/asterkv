@@ -53,13 +53,16 @@ $4 + payload alex       -> alex
 ```
 
 ## Integration status
-This step does not yet changed `astercli` output.
+`astercli` now uses the client response renderer for default user-facing output.
 
-`astercli` integration is intentionally deferred to the next step.
+Pretty rendering is used by:
+- local command mode;
+- single-command TCP mode;
+- TCP REPL mode.
 
 ## Current limitations
 The renderer does not yet support:
-- raw/pretty CLI switch;
+- explicit diagnostic raw protocol output mode;
 - response colors;
 - tables;
 - arrays;

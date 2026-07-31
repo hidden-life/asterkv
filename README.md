@@ -111,8 +111,7 @@ printf 'SET username alex\nGET username\n' | ./build/debug/apps/asterd/asterd --
 
 Example output:
 ```text
-+OK
-$4
+OK
 alex
 ```
 
@@ -126,9 +125,8 @@ Start an interactive in-memory local session:
 Example:
 ```text
 > SET username alex
-+OK
+OK
 > GET username
-$4
 alex
 > quit
 ```
@@ -149,7 +147,7 @@ printf 'PING\n' | nc -q 1 127.0.0.1 7721
 
 Expected response:
 ```text
-+PONG
+PONG
 ```
 
 Send multiple commands over one connection:
@@ -159,8 +157,7 @@ printf 'SET username alex\nGET username\n' | nc -q 1 127.0.0.1 7721
 
 Expected response:
 ```text
-+OK
-$4
+OK
 alex
 ```
 
@@ -212,6 +209,8 @@ Example response:
 ```text
 -ERR not_found key not found
 ```
+
+`astercli` prints human-readable responses by default.
 
 ### Server configuration file
 Create a config file:
@@ -268,11 +267,10 @@ Start interactive client:
 Example:
 ```text
 asterkv > PING
-+PONG
+PONG
 asterkv > SET username alex
-+OK
+OK
 asterkv > GET username
-$4
 alex
 asterkv > exit
 ```

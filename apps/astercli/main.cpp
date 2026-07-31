@@ -9,12 +9,14 @@
 #include <asterkv/storage/in_memory_storage.h>
 #include <asterkv/network/tcp_client.h>
 
+#include "asterkv/client/response_renderer.h"
+
 namespace {
     void printUsage(std::string_view execName) {
         std::cout
             << "Usage: " << execName << " [--version] [--help]\n"
             << "       " << execName << " --local <command>\n"
-            << "       " << execName << " --connect <host:port> <command>\n\n"
+            << "       " << execName << " --connect <host:port> [command]\n\n"
             << "AsterKV command-line client.\n\n"
             << "Options:\n"
             << "    --version                   Print version information.\n"
@@ -27,6 +29,8 @@ namespace {
             << "REPL commands:\n"
             << "    exit                        Exit REPL mode\n"
             << "    quit                        Exit REPL mode\n\n"
+            << "Output:\n"
+            << "    astercli prints human-readable responses by default.\n\n"
             << "Examples:\n"
             << "    " << execName << " --local PING\n"
             << "    " << execName << " --local \"SET username alex\"\n"
@@ -89,12 +93,22 @@ namespace {
         return stream.str();
     }
 
-    void printProtocolResponse(std::string_view response) {
-        std::cout << response;
+    int printPrettyResponse(std::string_view raw) {
+        auto rendered = AsterKV::Client::renderPrettyResponseText(raw);
+        if (rendered.isError()) {
+            std::cerr << "CLI response rendering error: "
+                << rendered.status().codeString()
+                << ' '
+                << rendered.status().message()
+                << '\n'
+            ;
 
-        if (response.empty() || response.back() != '\n') {
-            std::cout << '\n';
+            return EXIT_FAILURE;
         }
+
+        std::cout << rendered.value();
+
+        return EXIT_SUCCESS;
     }
 
     int runLocalMode(int argc, char **argv) {
@@ -110,9 +124,7 @@ namespace {
         const std::string commandLine = joinArguments(argc, argv, 2);
         const std::string response = pipeline.processLine(commandLine);
 
-        printProtocolResponse(response);
-
-        return EXIT_SUCCESS;
+        return printPrettyResponse(response);
     }
 
     int runConnectSingleCommandMode(const AsterKV::Network::TcpEndpoint &endpoint, std::string_view cmd) {
@@ -125,9 +137,7 @@ namespace {
             return EXIT_FAILURE;
         }
 
-        printProtocolResponse(response.value());
-
-        return EXIT_SUCCESS;
+        return printPrettyResponse(response.value());
     }
 
     int runConnectReplMode(const AsterKV::Network::TcpEndpoint &endpoint) {
@@ -164,7 +174,9 @@ namespace {
                 continue;
             }
 
-            printProtocolResponse(response.value());
+            if (printPrettyResponse(response.value()) != EXIT_SUCCESS) {
+                hadClientError = true;
+            }
         }
 
         return hadClientError ? EXIT_FAILURE : EXIT_SUCCESS;

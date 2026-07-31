@@ -62,7 +62,7 @@ wait_for_server() {
 
         response="$(run_cli PING 2>/dev/null || true)"
 
-        if printf '%s' "${response}" | grep -F -- "+PONG" >/dev/null; then
+        if printf '%s' "${response}" | grep -F -- "PONG" >/dev/null; then
             return 0
         fi
 
@@ -84,22 +84,22 @@ SERVER_PID="$!"
 wait_for_server
 
 response="$(run_cli PING)"
-assert_contains "${response}" "+PONG" "PING"
+assert_contains "${response}" "PONG" "PING"
 
 response="$(run_cli SET username jackson)"
-assert_contains "${response}" "+OK" "SET username"
+assert_contains "${response}" "OK" "SET username"
 
 response="$(run_cli GET username)"
 assert_contains "${response}" "jackson" "GET username"
 
 response="$(run_cli EXISTS username)"
-assert_contains "${response}" ":1" "EXISTS username"
+assert_contains "${response}" "1" "EXISTS username"
 
 response="$(run_cli DEL username)"
-assert_contains "${response}" ":1" "DEL username"
+assert_contains "${response}" "1" "DEL username"
 
 response="$(run_cli GET username)"
-assert_contains "${response}" "-ERR not_found key not found" "GET deleted username"
+assert_contains "${response}" "error: not_found key not found" "GET deleted username"
 
 kill -TERM "${SERVER_PID}" 2>/dev/null || fail "failed to send SIGTERM to server"
 

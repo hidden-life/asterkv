@@ -71,7 +71,7 @@ wait_for_server() {
 
         response="$(run_client 'PING\n' 2>/dev/null || true)"
 
-        if printf '%s' "${response}" | grep -F -- "+PONG" >/dev/null; then
+        if printf '%s' "${response}" | grep -F -- "PONG" >/dev/null; then
             return 0
         fi
 

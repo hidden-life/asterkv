@@ -69,7 +69,7 @@ wait_for_server() {
 
         response="$(run_cli PING 2>/dev/null || true)"
 
-        if printf '%s' "${response}" | grep -F -- "+PONG" >/dev/null; then
+        if printf '%s' "${response}" | grep -F -- "PONG" >/dev/null; then
             return 0
         fi
 
@@ -111,13 +111,13 @@ if ! grep -F -- "Log level: warn" "${SERVER_LOG}" >/dev/null; then
 fi
 
 response="$(run_cli SET config_key config_value)"
-assert_contains "${response}" "+OK" "SET config_key"
+assert_contains "${response}" "OK" "SET config_key"
 
 response="$(run_cli GET config_key)"
 assert_contains "${response}" "config_value" "GET config_key"
 
 response="$(run_cli EXISTS config_key)"
-assert_contains "${response}" ":1" "EXISTS config_key"
+assert_contains "${response}" "1" "EXISTS config_key"
 
 kill -TERM "${SERVER_PID}" 2>/dev/null || fail "failed to send SIGTERM to server"
 
