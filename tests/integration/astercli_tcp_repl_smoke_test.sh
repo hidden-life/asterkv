@@ -39,15 +39,29 @@ run_single_cli() {
 }
 
 run_repl_cli() {
-    printf '%s\n' \
-        "PING" \
-        "SET username jackson" \
-        "GET username" \
-        "EXISTS username" \
-        "DEL username" \
-        "GET username" \
-        "quit" |
-        "${TIMEOUT_BIN}" 5 "${ASTERCLI_BIN}" --connect "${HOST}:${PORT}"
+    set +e
+    output="$(
+        printf '%s\n' \
+            "PING" \
+            "SET username alex" \
+            "GET username" \
+            "EXISTS username" \
+            "DEL username" \
+            "GET username" \
+            "quit" |
+            "${TIMEOUT_BIN}" 5 "${ASTERCLI_BIN}" --connect "${HOST}:${PORT}" 2>&1
+    )"
+    status="$?"
+    set -e
+
+    if [ "${status}" -eq 0 ]; then
+        echo "Expected REPL session to return non-zero because it contains a protocol error" >&2
+        echo "Output:" >&2
+        printf '%s\n' "${output}" >&2
+        fail "expected REPL failure exit code"
+    fi
+
+    printf '%s' "${output}"
 }
 
 assert_contains() {
@@ -100,7 +114,7 @@ response="$(run_repl_cli)"
 assert_contains "${response}" "AsterKV TCP REPL connected to ${HOST}:${PORT}" "REPL startup"
 assert_contains "${response}" "PONG" "REPL PING"
 assert_contains "${response}" "OK" "REPL SET username"
-assert_contains "${response}" "jackson" "REPL GET username"
+assert_contains "${response}" "alex" "REPL GET username"
 assert_contains "${response}" "1" "REPL EXISTS username"
 assert_contains "${response}" "error: not_found key not found" "REPL GET deleted username"
 

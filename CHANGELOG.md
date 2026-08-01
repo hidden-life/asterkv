@@ -44,12 +44,19 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added human-readable CLI output for TCP single-command mode.
 - Added human-readable CLI output for TCP REPL mode.
 - Added documentation and ADR for pretty CLI output by default.
+- Added `astercli` protocol error and exit-code policy.
+- Added stderr output for protocol-level CLI errors.
+- Added CLI exit code `1` for protocol-level errors.
+- Added CLI stdout/stderr/exit-code tests.
+- Added documentation and ADR for `astercli` error handling.
 
 ### Changed
 - Kept direct `spdlog` usage behind the `AsterKV::Logging` facade.
 - Strengthened TCP client/server integration coverage before the first release.
 - Updated project version to `0.2.0` for the next milestone.
 - Changed `astercli` to print pretty responses by default instead of raw protocol responses.
+- Changed `astercli` protocol errors to return non-zero exit codes.
+- Changed TCP CLI integration tests to expect non-zero exit codes for protocol errors.
 
 ### Known limitations
 - Storage is in-memory only.

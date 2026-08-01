@@ -38,6 +38,22 @@ run_cli() {
     "${TIMEOUT_BIN}" 5 "${ASTERCLI_BIN}" --connect "${HOST}:${PORT}" "$@"
 }
 
+run_cli_expect_failure() {
+    set +e
+    output="$("${TIMEOUT_BIN}" 5 "${ASTERCLI_BIN}" --connect "${HOST}:${PORT}" "$@" 2>&1)"
+    status="$?"
+    set -e
+
+    if [ "${status}" -eq 0 ]; then
+        echo "Expected astercli command to fail but it succeeded: $*" >&2
+        echo "Output:" >&2
+        printf '%s\n' "${output}" >&2
+        fail "expected command failure"
+    fi
+
+    printf '%s' "${output}"
+}
+
 assert_contains() {
     haystack="$1"
     needle="$2"
@@ -83,10 +99,10 @@ SERVER_PID="$!"
 
 wait_for_server
 
-response="$(run_cli NOPE key)"
+response="$(run_cli_expect_failure NOPE key)"
 assert_contains "${response}" "error: invalid_argument unknown command" "unknown command"
 
-response="$(run_cli GET missing_key)"
+response="$(run_cli_expect_failure GET missing_key)"
 assert_contains "${response}" "error: not_found key not found" "missing key"
 
 response="$(run_cli SET healthy_key healthy_value)"

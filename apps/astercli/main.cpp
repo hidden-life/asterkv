@@ -8,8 +8,7 @@
 #include <asterkv/pipeline/local_pipeline.h>
 #include <asterkv/storage/in_memory_storage.h>
 #include <asterkv/network/tcp_client.h>
-
-#include "asterkv/client/response_renderer.h"
+#include <asterkv/client/response_renderer.h>
 
 namespace {
     void printUsage(std::string_view execName) {
@@ -30,7 +29,8 @@ namespace {
             << "    exit                        Exit REPL mode\n"
             << "    quit                        Exit REPL mode\n\n"
             << "Output:\n"
-            << "    astercli prints human-readable responses by default.\n\n"
+            << "    Successful responses are printed to stdout.\n"
+            << "    Protocol errors are printed to stderr and return exit code 1.\n\n"
             << "Examples:\n"
             << "    " << execName << " --local PING\n"
             << "    " << execName << " --local \"SET username alex\"\n"
@@ -93,20 +93,29 @@ namespace {
         return stream.str();
     }
 
-    int printPrettyResponse(std::string_view raw) {
-        auto rendered = AsterKV::Client::renderPrettyResponseText(raw);
-        if (rendered.isError()) {
-            std::cerr << "CLI response rendering error: "
-                << rendered.status().codeString()
+    int printUserResponse(std::string_view raw) {
+        auto parsed = AsterKV::Client::parseProtocolResponse(raw);
+        if (parsed.isError()) {
+            std::cerr << "CLI response parsing error: "
+                << parsed.status().codeString()
                 << ' '
-                << rendered.status().message()
+                << parsed.status().message()
                 << '\n'
             ;
 
             return EXIT_FAILURE;
         }
 
-        std::cout << rendered.value();
+        const AsterKV::Client::ProtocolResponse &response = parsed.value();
+        const std::string rendered = AsterKV::Client::renderPrettyResponse(response);
+
+        if (response.kind == AsterKV::Client::ProtocolResponseKind::Error) {
+            std::cerr << rendered;
+
+            return EXIT_FAILURE;
+        }
+
+        std::cout << rendered;
 
         return EXIT_SUCCESS;
     }
@@ -124,7 +133,7 @@ namespace {
         const std::string commandLine = joinArguments(argc, argv, 2);
         const std::string response = pipeline.processLine(commandLine);
 
-        return printPrettyResponse(response);
+        return printUserResponse(response);
     }
 
     int runConnectSingleCommandMode(const AsterKV::Network::TcpEndpoint &endpoint, std::string_view cmd) {
@@ -137,12 +146,12 @@ namespace {
             return EXIT_FAILURE;
         }
 
-        return printPrettyResponse(response.value());
+        return printUserResponse(response.value());
     }
 
     int runConnectReplMode(const AsterKV::Network::TcpEndpoint &endpoint) {
         AsterKV::Network::TcpLineClient client {endpoint};
-        bool hadClientError = false;
+        bool hadFailure = false;
 
         std::cout << "AsterKV TCP REPL connected to " << AsterKV::Network::tcpEndpointToString(endpoint) << '\n'
             << "Type 'exit' or 'quit' to leave.\n"
@@ -168,18 +177,18 @@ namespace {
 
             auto response = client.sendCommandLine(trimmed);
             if (response.isError()) {
-                hadClientError = true;
+                hadFailure = true;
 
                 std::cerr << "TCP client error: " << response.status().codeString() << ' ' << response.status().message() << '\n';
                 continue;
             }
 
-            if (printPrettyResponse(response.value()) != EXIT_SUCCESS) {
-                hadClientError = true;
+            if (printUserResponse(response.value()) != EXIT_SUCCESS) {
+                hadFailure = true;
             }
         }
 
-        return hadClientError ? EXIT_FAILURE : EXIT_SUCCESS;
+        return hadFailure ? EXIT_FAILURE : EXIT_SUCCESS;
     }
 
 
