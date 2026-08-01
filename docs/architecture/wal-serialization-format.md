@@ -80,6 +80,19 @@ Invalid examples include:
 - empty value for `set`;
 - non-empty value for `del`.
 
+## File writer usage
+
+The WAL file writer appends one serialized WAL record per line.
+
+Example file content:
+
+```text
+AKVWAL1 1 set 757365726e616d65 6a61636b736f6e
+AKVWAL1 2 del 757365726e616d65 -
+```
+
+The serialization format remains independent from the file writer.
+
 ## Scope
 This step defines serialization and deserialization only.
 

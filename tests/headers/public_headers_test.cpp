@@ -19,6 +19,7 @@
 #include <asterkv/client/response_renderer.h>
 #include <asterkv/wal/wal_record.h>
 #include <asterkv/wal/wal_record_codec.h>
+#include <asterkv/wal/wal_file_writer.h>
 
 #include <string>
 
@@ -157,6 +158,25 @@ int main() {
     }
 
     if (deserializedPublicWalRecord.value().value != publicWalRecord.value) {
+        return 1;
+    }
+
+    const AsterKV::Wal::WalFileWriterOptions publicWalWriterOptions{};
+
+    if (!publicWalWriterOptions.flushAfterWrite) {
+        return 1;
+    }
+
+    const AsterKV::Wal::WalFileWriter publicWalWriter{
+        "public_headers_test.wal",
+        publicWalWriterOptions,
+    };
+
+    if (publicWalWriter.path().empty()) {
+        return 1;
+    }
+
+    if (!publicWalWriter.options().flushAfterWrite) {
         return 1;
     }
 

@@ -24,13 +24,14 @@ Implemented foundations:
 - WAL record model;
 - WAL record validation;
 - WAL record serialization;
-- WAL record deserialization.
+- WAL record deserialization;
+- WAL file writer foundation.
 
 Not implemented yet:
-- WAL file writer;
 - WAL file reader;
 - replay;
 - `asterd` integration;
+- fsync policy;
 - durability guarantees.
 
 ## WAL scope
