@@ -17,6 +17,7 @@
 #include <asterkv/logging/logger.h>
 #include <asterkv/network/tcp_client.h>
 #include <asterkv/client/response_renderer.h>
+#include <asterkv/wal/wal_record.h>
 
 #include <string>
 
@@ -122,6 +123,17 @@ int main() {
     }
 
     if (parsedConfig.value().endpoint.port != AsterKV::Network::defaultClientPort) {
+        return 1;
+    }
+
+    const AsterKV::Wal::WalRecord publicWalRecord =
+    AsterKV::Wal::makeSetRecord(1, "public_header_key", "public_header_value");
+
+    if (!AsterKV::Wal::validateWalRecord(publicWalRecord).isOk()) {
+        return 1;
+    }
+
+    if (AsterKV::Wal::walRecordTypeToString(publicWalRecord.type) != "set") {
         return 1;
     }
 

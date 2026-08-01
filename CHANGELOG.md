@@ -5,6 +5,18 @@ AsterKV follows a Semantic Versioning-style release policy using `MAJOR.MINOR.PA
 versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 
 ## Unreleased
+### Added
+- Started the `0.3.0` storage durability planning and WAL foundation milestone.
+- Added the `AsterKV::Wal` module.
+- Added WAL record model foundation.
+- Added WAL record validation.
+- Added WAL record model tests.
+- Added storage durability roadmap documentation.
+- Added WAL record model architecture documentation and ADR.
+
+### Changed
+- Updated project version to `0.3.0` for the next milestone.
+
 ## [0.2.0] - 2026-08-01
 ### Added
 - Added `AsterKV::Client` module.
