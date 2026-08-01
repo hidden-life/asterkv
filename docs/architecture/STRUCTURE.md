@@ -32,6 +32,7 @@ src/server      Server runtime options, shutdown handling, and runtime wiring.
 src/config      Server configuration file parsing and loading.
 src/logging     Project logging facade backend by spdlog.
 src/client      Client-side helpers, including protocol response parsing and rendering.
+src/wal         Write-ahead log foundations.
 ```
 
 The core library currently contains:
@@ -94,6 +95,7 @@ tests/server            Server runtime boundary tests.
 tests/config            Configuration parser tests.
 tests/logging           Logging facade tests.
 tests/client            Client module tests.
+tests/wal               WAL module tests.
 ```
 
 ## Planned future modules

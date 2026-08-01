@@ -9,6 +9,7 @@ target_link_libraries(asterkv_public_headers_test
         AsterKV::Command
         AsterKV::Protocol
         AsterKV::Storage
+        AsterKV::Wal
         AsterKV::Execution
         AsterKV::Pipeline
         AsterKV::Client
