@@ -253,6 +253,31 @@ Run commands through `astercli`:
 
 `astercli` currently prints raw protocol responses.
 
+### CLI errors and exit codes
+`astercli` prints successful responses to stdout.
+
+Protocol errors are printed to stderr and return exit code `1`.
+
+Example:
+```bash
+./build/debug/apps/astercli/astercli --connect 127.0.0.1:7721 GET missing_key
+```
+
+Output:
+```text
+error: not_found key not found
+```
+
+Shell check:
+```bash
+echo $?
+```
+
+Expected:
+```text
+1
+```
+
 ### TCP REPL
 Start the server:
 ```bash

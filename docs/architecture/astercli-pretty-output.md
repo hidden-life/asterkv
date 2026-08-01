@@ -53,3 +53,25 @@ At this stage, this step does not change process exit-code policy for protocol-l
 errors.
 
 That policy is handled separately.
+
+## Exit code policy
+Pretty output is combined with shell-friendly exit-code behavior.
+
+Successful responses are printed to stdout and return exit code `0`.
+
+Protocol errors are printed to stderr and return exit code `1`.
+
+Example:
+```bash
+astercli --connect 127.0.0.1:7721 GET missing_key
+```
+
+Output:
+```text
+error: not_found key not found
+```
+
+Exit code:
+```text
+1
+```

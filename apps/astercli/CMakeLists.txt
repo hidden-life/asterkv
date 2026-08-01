@@ -43,7 +43,7 @@ if (BUILD_TESTING)
 
     add_test(
             NAME astercli_local_unknown_command
-            COMMAND astercli --local "NOPE key"
+            COMMAND /bin/sh -c "\"$<TARGET_FILE:astercli>\" --local \"NOPE key\" 2>&1; test $? -ne 0"
     )
 
     set_tests_properties(
@@ -70,5 +70,15 @@ if (BUILD_TESTING)
     set_tests_properties(astercli_rejects_invalid_connect_endpoint
             PROPERTIES
                 PASS_REGULAR_EXPRESSION "Invalid connect address"
+    )
+
+    add_test(
+            NAME astercli_local_success_exit_code
+            COMMAND /bin/sh -c "stderr_file=\"$(mktemp)\"; output=\"$($<TARGET_FILE:astercli> --local PING 2>\"$stderr_file\")\"; status=$?; test \"$status\" -eq 0 && printf '%s' \"$output\" | grep -F -- PONG >/dev/null && test ! -s \"$stderr_file\"; result=$?; rm -f \"$stderr_file\"; exit \"$result\""
+    )
+
+    add_test(
+            NAME astercli_local_protocol_error_exit_code
+            COMMAND /bin/sh -c "stderr_file=\"$(mktemp)\"; stdout=\"$($<TARGET_FILE:astercli> --local \"NOPE key\" 2>\"$stderr_file\")\"; status=$?; test \"$status\" -ne 0 && test -z \"$stdout\" && grep -F -- \"error: invalid_argument unknown command\" \"$stderr_file\" >/dev/null; result=$?; rm -f \"$stderr_file\"; exit \"$result\""
     )
 endif ()
