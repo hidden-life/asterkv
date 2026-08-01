@@ -38,7 +38,7 @@ Run a TCP command:
 
 Expected response:
 ```text
-+PONG
+PONG
 ```
 
 Store and read a value:
@@ -49,8 +49,7 @@ Store and read a value:
 
 Expected responses:
 ```text
-+OK
-$4
+OK
 alex
 ```
 
@@ -335,6 +334,30 @@ See:
 - `docs/release/v0.1.0.md`;
 - `docs/release/v0.1.0-checklist.md`;
 - `docs/release/known-limitations.md`.
+
+## v0.2.0 scope
+AsterKV v0.2.0 is the CLI response rendering and client UX foundation release.
+
+It includes:
+
+- `AsterKV::Client`;
+- client-side protocol response parsing;
+- pretty response rendering;
+- pretty output by default in `astercli`;
+- stdout/stderr/exit-code policy for `astercli`;
+- improved TCP REPL UX;
+- REPL-side `help` and `?`;
+- release documentation for `v0.2.0`.
+
+The next planned milestone is:
+
+```text
+0.3.0 — Storage durability planning and WAL foundation
+```
+See:
+- `docs/release/v0.2.0.md`
+- `docs/release/v0.2.0-checklist.md`
+- `docs/release/known-limitations-v0.2.0.md`
 
 ## Development principles
 - C++23.

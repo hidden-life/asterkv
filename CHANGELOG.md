@@ -5,6 +5,46 @@ AsterKV follows a Semantic Versioning-style release policy using `MAJOR.MINOR.PA
 versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 
 ## Unreleased
+## [0.2.0] - 2026-08-01
+### Added
+- Added `AsterKV::Client` module.
+- Added client-side protocol response parsing.
+- Added client-side pretty response rendering.
+- Added pretty output integration for `astercli`.
+- Added human-readable CLI output for local command mode.
+- Added human-readable CLI output for TCP single-command mode.
+- Added human-readable CLI output for TCP REPL mode.
+- Added `astercli` protocol error and exit-code policy.
+- Added stderr output for protocol-level CLI errors.
+- Added CLI exit code `1` for protocol-level errors.
+- Added CLI stdout/stderr/exit-code tests.
+- Added REPL-side `help` and `?` commands for `astercli`.
+- Added clearer TCP REPL startup banner.
+- Added graceful TCP REPL goodbye message.
+- Added TCP REPL success smoke test.
+- Added CLI response rendering architecture documentation and ADRs.
+- Added release documentation for `v0.2.0`.
+
+### Changed
+- Updated project version to `0.2.0`.
+- Changed `astercli` to print pretty responses by default instead of raw protocol responses.
+- Changed `astercli` protocol errors to return non-zero exit codes.
+- Changed TCP CLI integration tests to expect non-zero exit codes for protocol errors.
+- Improved `astercli` TCP REPL user experience.
+- Changed TCP REPL startup text to separate title and endpoint output.
+
+### Known limitations
+- `astercli` does not expose a public raw output mode.
+- TCP REPL uses one TCP connection per command.
+- No command history.
+- No autocompletion.
+- No persistent storage.
+- No WAL.
+- No replication.
+- No Raft.
+- No authentication.
+- No TLS.
+
 ## [0.1.0] - 2026-07-30
 ### Added
 - Added initial project bootstrap.
