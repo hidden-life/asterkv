@@ -24,6 +24,11 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added configurable WAL stream flush-after-write option.
 - Added WAL file writer tests.
 - Added WAL file writer architecture documentation and ADR.
+- Added WAL file reader foundation.
+- Added WAL record file reading in file order.
+- Added fail-fast handling for invalid WAL record lines.
+- Added WAL file reader tests.
+- Added WAL file reader architecture documentation and ADR.
 
 ### Changed
 - Updated project version to `0.3.0` for the next milestone.

@@ -53,6 +53,13 @@ It is not the same as `fsync`.
 
 This step does not claim crash-safe durability.
 
+## Reader compatibility
+Records written by the WAL file writer can be read by the WAL file reader.
+
+The reader returns records in file order.
+
+Replay into storage is handled by a later step.
+
 ## Current limitations
 The writer does not yet provide:
 - fsync policy;

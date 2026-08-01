@@ -25,10 +25,10 @@ Implemented foundations:
 - WAL record validation;
 - WAL record serialization;
 - WAL record deserialization;
-- WAL file writer foundation.
+- WAL file writer foundation;
+- WAL file reader foundation.
 
 Not implemented yet:
-- WAL file reader;
 - replay;
 - `asterd` integration;
 - fsync policy;
