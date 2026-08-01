@@ -93,6 +93,15 @@ AKVWAL1 2 del 757365726e616d65 -
 
 The serialization format remains independent from the file writer.
 
+## File reader usage
+The WAL file reader expects one serialized WAL record per line.
+
+An empty file is valid.
+
+An empty record line is invalid.
+
+Each line is deserialized using the WAL record codec.
+
 ## Scope
 This step defines serialization and deserialization only.
 

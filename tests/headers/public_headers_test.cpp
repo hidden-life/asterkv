@@ -20,6 +20,7 @@
 #include <asterkv/wal/wal_record.h>
 #include <asterkv/wal/wal_record_codec.h>
 #include <asterkv/wal/wal_file_writer.h>
+#include <asterkv/wal/wal_file_reader.h>
 
 #include <string>
 
@@ -177,6 +178,14 @@ int main() {
     }
 
     if (!publicWalWriter.options().flushAfterWrite) {
+        return 1;
+    }
+
+    const AsterKV::Wal::WalFileReader publicWalReader{
+        "public_headers_test.wal",
+    };
+
+    if (publicWalReader.path().empty()) {
         return 1;
     }
 
