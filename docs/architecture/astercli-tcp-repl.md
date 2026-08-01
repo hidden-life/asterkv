@@ -14,8 +14,19 @@ Start REPL:
 
 Example session:
 ```text
-AsterKV TCP REPL connected to 127.0.0.1:7721
-Type 'exit' or 'quit' to leave.
+AsterKV TCP REPL
+Connected to 127.0.0.1:7721
+Type 'help' for commands, 'exit' or 'quit' to leave.
+asterkv > help
+AsterKV REPL commands:
+    help, ?         Show this help message
+    exit, quit      Exit REPL mode
+Server commands:
+    PING
+    SET <key> <value>
+    GET <key>
+    DEL <key>
+    EXISTS <key>
 asterkv > PING
 PONG
 asterkv > SET username alex
@@ -23,6 +34,7 @@ OK
 asterkv > GET username
 alex
 asterkv > quit
+Goodbye.
 ```
 
 ## Exit commands
@@ -33,6 +45,15 @@ quit
 ```
 
 The commands are case-insensitive.
+
+## Built-in commands
+The following commands are handled locally by `astercli`:
+- `help`;
+- `?`;
+- `exit`;
+- `quit`.
+
+They are case-insensitive and are not sent to the server.
 
 ## Empty lines
 Empty lines are ignored.

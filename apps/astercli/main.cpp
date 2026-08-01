@@ -26,8 +26,8 @@ namespace {
             << "    --connect with command      Execute one TCP command and exit\n"
             << "    --connect without command   Start TCP REPL mode\n\n"
             << "REPL commands:\n"
-            << "    exit                        Exit REPL mode\n"
-            << "    quit                        Exit REPL mode\n\n"
+            << "    help, ?                     Show REPL help\n"
+            << "    exit, quit                  Exit REPL mode\n\n"
             << "Output:\n"
             << "    Successful responses are printed to stdout.\n"
             << "    Protocol errors are printed to stderr and return exit code 1.\n\n"
@@ -37,6 +37,19 @@ namespace {
             << "    " << execName << " --connect 127.0.0.1:" << AsterKV::Network::defaultClientPort << " PING\n"
             << "    " << execName << " --connect 127.0.0.1:" << AsterKV::Network::defaultClientPort << " SET username alex\n"
             << "    " << execName << " --connect 127.0.0.1:" << AsterKV::Network::defaultClientPort << '\n'
+        ;
+    }
+
+    void printReplHelp() {
+        std::cout << "AsterKV REPL commands:\n"
+            << "    help, ?         Show this help message\n"
+            << "    exit, quit      Exit REPL mode\n\n"
+            << "Server commands:\n"
+            << "    PING\n"
+            << "    SET <key> <value>\n"
+            << "    GET <key>\n"
+            << "    DEL <key>\n"
+            << "    EXISTS <key>\n"
         ;
     }
 
@@ -77,6 +90,12 @@ namespace {
         const std::string_view trimmed = trim(cmd);
 
         return equalsIgnoreCase(trimmed, "exit") || equalsIgnoreCase(trimmed, "quit");
+    }
+
+    [[nodiscard]] bool isHelpCommand(std::string_view commandLine) noexcept {
+        const std::string_view trimmed = trim(commandLine);
+
+        return equalsIgnoreCase(trimmed, "help") || equalsIgnoreCase(trimmed, "?");
     }
 
     [[nodiscard]] std::string joinArguments(int argc, char **argv, int startIdx) {
@@ -153,8 +172,10 @@ namespace {
         AsterKV::Network::TcpLineClient client {endpoint};
         bool hadFailure = false;
 
-        std::cout << "AsterKV TCP REPL connected to " << AsterKV::Network::tcpEndpointToString(endpoint) << '\n'
-            << "Type 'exit' or 'quit' to leave.\n"
+        std::cout << "AsterKV TCP REPL\n"
+            << "Connected to "
+            << AsterKV::Network::tcpEndpointToString(endpoint) << '\n'
+            << "Type 'help' for commands, 'exit' or 'quit' to leave.\n"
         ;
 
         std::string cmdLine;
@@ -162,7 +183,7 @@ namespace {
         while (true) {
             std::cout << "asterkv > " << std::flush;
             if (!std::getline(std::cin, cmdLine)) {
-                std::cout << '\n';
+                std::cout << '\n' << "Goodbye.\n";
                 break;
             }
 
@@ -172,7 +193,13 @@ namespace {
             }
 
             if (isExitCommand(trimmed)) {
+                std::cout << "Goodbye.\n";
                 break;
+            }
+
+            if (isHelpCommand(trimmed)) {
+                printReplHelp();
+                continue;
             }
 
             auto response = client.sendCommandLine(trimmed);

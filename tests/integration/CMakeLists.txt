@@ -133,6 +133,24 @@ if (ASTERKV_TIMEOUT_EXECUTABLE)
                 LABELS "integration;network;cli"
                 TIMEOUT 30
     )
+
+    add_test(
+            NAME astercli_tcp_repl_success_smoke_test
+            COMMAND
+                /bin/sh
+                "${CMAKE_CURRENT_SOURCE_DIR}/astercli_tcp_repl_success_smoke_test.sh"
+                "$<TARGET_FILE:asterd>"
+                "$<TARGET_FILE:astercli>"
+                "${ASTERKV_TIMEOUT_EXECUTABLE}"
+                "127.0.0.1"
+                "17728"
+    )
+
+    set_tests_properties(astercli_tcp_repl_success_smoke_test
+            PROPERTIES
+                LABELS "integration;network;cli"
+                TIMEOUT 30
+    )
 elseif (ASTERKV_REQUIRE_TEST_DEPENDENCIES)
     message(FATAL_ERROR "astercli TCP integration test requires 'timeout'.")
 else ()

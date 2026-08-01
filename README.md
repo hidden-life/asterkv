@@ -291,13 +291,27 @@ Start interactive client:
 
 Example:
 ```text
+AsterKV TCP REPL
+Connected to 127.0.0.1:7721
+Type 'help' for commands, 'exit' or 'quit' to leave.
+asterkv > help
+AsterKV REPL commands:
+    help, ?         Show this help message
+    exit, quit      Exit REPL mode
+Server commands:
+    PING
+    SET <key> <value>
+    GET <key>
+    DEL <key>
+    EXISTS <key>
 asterkv > PING
 PONG
 asterkv > SET username alex
 OK
 asterkv > GET username
 alex
-asterkv > exit
+asterkv > quit
+Goodbye.
 ```
 
 The REPL currently prints raw protocol responses and opens one TCP connection per command.

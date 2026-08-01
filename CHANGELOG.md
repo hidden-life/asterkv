@@ -49,6 +49,11 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added CLI exit code `1` for protocol-level errors.
 - Added CLI stdout/stderr/exit-code tests.
 - Added documentation and ADR for `astercli` error handling.
+- Added REPL-side `help` and `?` commands for `astercli`.
+- Added clearer TCP REPL startup banner.
+- Added graceful TCP REPL goodbye message.
+- Added TCP REPL success smoke test.
+- Added REPL UX architecture documentation and ADR.
 
 ### Changed
 - Kept direct `spdlog` usage behind the `AsterKV::Logging` facade.
@@ -57,6 +62,8 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Changed `astercli` to print pretty responses by default instead of raw protocol responses.
 - Changed `astercli` protocol errors to return non-zero exit codes.
 - Changed TCP CLI integration tests to expect non-zero exit codes for protocol errors.
+- Improved `astercli` TCP REPL user experience.
+- Changed TCP REPL startup text to separate title and endpoint output.
 
 ### Known limitations
 - Storage is in-memory only.
