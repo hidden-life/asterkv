@@ -50,6 +50,9 @@ The REPL continues accepting commands.
 If any command in the REPL session fails, the REPL process exits with code `1`
 after the user exits the session.
 
+Built-in REPL commands such as `help`, `?`, `exit`, and `quit` do not count as protocol
+failures because they are handled locally by `astercli`.
+
 ## Rationale
 This policy makes `astercli` usable in shell scripts.
 
