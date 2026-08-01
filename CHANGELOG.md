@@ -19,6 +19,11 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added hex-encoded WAL key/value fields.
 - Added WAL serialization roundtrip tests.
 - Added WAL serialization architecture documentation and ADR.
+- Added WAL file writer foundation.
+- Added append-only WAL record file writing.
+- Added configurable WAL stream flush-after-write option.
+- Added WAL file writer tests.
+- Added WAL file writer architecture documentation and ADR.
 
 ### Changed
 - Updated project version to `0.3.0` for the next milestone.
