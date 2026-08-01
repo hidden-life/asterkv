@@ -20,6 +20,19 @@ The planned path is:
 6. Optional `asterd` WAL path.
 7. Release preparation for `v0.3.0`.
 
+Implemented foundations:
+- WAL record model;
+- WAL record validation;
+- WAL record serialization;
+- WAL record deserialization.
+
+Not implemented yet:
+- WAL file writer;
+- WAL file reader;
+- replay;
+- `asterd` integration;
+- durability guarantees.
+
 ## WAL scope
 
 The first WAL foundation supports logical key-value mutations:

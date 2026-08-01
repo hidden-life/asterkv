@@ -18,6 +18,7 @@
 #include <asterkv/network/tcp_client.h>
 #include <asterkv/client/response_renderer.h>
 #include <asterkv/wal/wal_record.h>
+#include <asterkv/wal/wal_record_codec.h>
 
 #include <string>
 
@@ -134,6 +135,28 @@ int main() {
     }
 
     if (AsterKV::Wal::walRecordTypeToString(publicWalRecord.type) != "set") {
+        return 1;
+    }
+
+    const auto serializedPublicWalRecord =
+        AsterKV::Wal::serialize(publicWalRecord);
+
+    if (serializedPublicWalRecord.isError()) {
+        return 1;
+    }
+
+    const auto deserializedPublicWalRecord =
+        AsterKV::Wal::deserialize(serializedPublicWalRecord.value());
+
+    if (deserializedPublicWalRecord.isError()) {
+        return 1;
+    }
+
+    if (deserializedPublicWalRecord.value().key != publicWalRecord.key) {
+        return 1;
+    }
+
+    if (deserializedPublicWalRecord.value().value != publicWalRecord.value) {
         return 1;
     }
 

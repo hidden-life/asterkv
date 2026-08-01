@@ -13,6 +13,12 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added WAL record model tests.
 - Added storage durability roadmap documentation.
 - Added WAL record model architecture documentation and ADR.
+- Added WAL record serialization foundation.
+- Added WAL record deserialization foundation.
+- Added versioned `AKVWAL1` serialized WAL record format.
+- Added hex-encoded WAL key/value fields.
+- Added WAL serialization roundtrip tests.
+- Added WAL serialization architecture documentation and ADR.
 
 ### Changed
 - Updated project version to `0.3.0` for the next milestone.

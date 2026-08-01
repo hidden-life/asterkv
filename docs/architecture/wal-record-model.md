@@ -52,6 +52,20 @@ Validation rules:
 - key must not be empty;
 - value must not be empty.
 
+## Serialization
+
+The logical record model can be serialized through the WAL serialization foundation.
+
+The current serialized format is documented in:
+
+```text
+docs/architecture/wal-serialization-format.md
+```
+
+Serialization is separate from file writing.
+
+A serialized WAL record is not durable until a future WAL writer persists it to storage.
+
 ## Current limitations
 The record model does not yet define:
 - serialization format;

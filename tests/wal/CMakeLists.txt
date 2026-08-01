@@ -1,15 +1,31 @@
-add_executable(asterkv_wal_tests
+add_executable(asterkv_wal_record_tests
         wal_record_test.cpp
 )
 
-target_link_libraries(asterkv_wal_tests
+target_link_libraries(asterkv_wal_record_tests
         PRIVATE
             AsterKV::Wal
 )
 
-asterkvApplyCompilerOptions(asterkv_wal_tests)
+asterkvApplyCompilerOptions(asterkv_wal_record_tests)
 
 add_test(
-        NAME asterkv_wal_tests
-        COMMAND asterkv_wal_tests
+        NAME asterkv_wal_record_tests
+        COMMAND asterkv_wal_record_tests
+)
+
+add_executable(asterkv_wal_record_codec_tests
+        wal_record_codec_test.cpp
+)
+
+target_link_libraries(asterkv_wal_record_codec_tests
+        PRIVATE
+        AsterKV::Wal
+)
+
+asterkvApplyCompilerOptions(asterkv_wal_record_codec_tests)
+
+add_test(
+        NAME asterkv_wal_record_codec_tests
+        COMMAND asterkv_wal_record_codec_tests
 )
