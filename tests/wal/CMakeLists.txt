@@ -61,3 +61,35 @@ add_test(
         NAME asterkv_wal_file_reader_tests
         COMMAND asterkv_wal_file_reader_tests
 )
+
+add_executable(asterkv_wal_replay_tests
+        wal_replay_test.cpp
+)
+
+target_link_libraries(asterkv_wal_replay_tests
+        PRIVATE
+        AsterKV::Wal
+)
+
+asterkvApplyCompilerOptions(asterkv_wal_replay_tests)
+
+add_test(
+        NAME asterkv_wal_replay_tests
+        COMMAND asterkv_wal_replay_tests
+)
+
+add_executable(asterkv_wal_backed_storage_tests
+        wal_backed_storage_test.cpp
+)
+
+target_link_libraries(asterkv_wal_backed_storage_tests
+        PRIVATE
+        AsterKV::Wal
+)
+
+asterkvApplyCompilerOptions(asterkv_wal_backed_storage_tests)
+
+add_test(
+        NAME asterkv_wal_backed_storage_tests
+        COMMAND asterkv_wal_backed_storage_tests
+)

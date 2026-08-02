@@ -29,6 +29,14 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added fail-fast handling for invalid WAL record lines.
 - Added WAL file reader tests.
 - Added WAL file reader architecture documentation and ADR.
+- Added WAL replay foundation.
+- Added generic `WalReplayTarget`.
+- Added WAL record list and WAL file replay helpers.
+- Added in-memory WAL replay target.
+- Added WAL-backed storage foundation.
+- Added WAL-backed storage recovery from WAL file.
+- Added WAL replay and WAL-backed storage tests.
+- Added WAL replay/storage architecture documentation and ADR.
 
 ### Changed
 - Updated project version to `0.3.0` for the next milestone.

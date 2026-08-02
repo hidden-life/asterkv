@@ -21,6 +21,8 @@
 #include <asterkv/wal/wal_record_codec.h>
 #include <asterkv/wal/wal_file_writer.h>
 #include <asterkv/wal/wal_file_reader.h>
+#include <asterkv/wal/wal_replay.h>
+#include <asterkv/wal/wal_backed_storage.h>
 
 #include <string>
 
@@ -186,6 +188,25 @@ int main() {
     };
 
     if (publicWalReader.path().empty()) {
+        return 1;
+    }
+
+    AsterKV::Storage::InMemoryStorage publicWalStorageEngine;
+
+    AsterKV::Wal::InMemoryWalReplayTarget publicReplayTarget{
+        publicWalStorageEngine,
+    };
+
+    if (!AsterKV::Wal::replayRecord(publicWalRecord, publicReplayTarget).isOk()) {
+        return 1;
+    }
+
+    AsterKV::Wal::WalBackedStorage publicWalBackedStorage{
+        publicWalStorageEngine,
+        "public_headers_test.wal",
+    };
+
+    if (publicWalBackedStorage.filePath().empty()) {
         return 1;
     }
 
