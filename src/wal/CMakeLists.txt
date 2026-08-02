@@ -38,6 +38,7 @@ target_include_directories(asterkv_wal
 target_link_libraries(asterkv_wal
         PUBLIC
             AsterKV::Core
+            AsterKV::Storage
 )
 
 asterkvApplyCompilerOptions(asterkv_wal)

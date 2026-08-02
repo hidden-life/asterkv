@@ -27,6 +27,8 @@ Implemented foundations:
 - WAL record deserialization;
 - WAL file writer foundation;
 - WAL file reader foundation.
+- WAL replay foundation.
+- WAL-backed in-memory storage foundation.
 
 Not implemented yet:
 - replay;
