@@ -5,48 +5,54 @@ AsterKV follows a Semantic Versioning-style release policy using `MAJOR.MINOR.PA
 versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 
 ## Unreleased
+## [0.3.0] - 2026-08-04
 ### Added
 - Started the `0.3.0` storage durability planning and WAL foundation milestone.
 - Added the `AsterKV::Wal` module.
 - Added WAL record model foundation.
 - Added WAL record validation.
-- Added WAL record model tests.
-- Added storage durability roadmap documentation.
-- Added WAL record model architecture documentation and ADR.
 - Added WAL record serialization foundation.
 - Added WAL record deserialization foundation.
 - Added versioned `AKVWAL1` serialized WAL record format.
 - Added hex-encoded WAL key/value fields.
 - Added WAL serialization roundtrip tests.
-- Added WAL serialization architecture documentation and ADR.
 - Added WAL file writer foundation.
 - Added append-only WAL record file writing.
 - Added configurable WAL stream flush-after-write option.
-- Added WAL file writer tests.
-- Added WAL file writer architecture documentation and ADR.
 - Added WAL file reader foundation.
 - Added WAL record file reading in file order.
 - Added fail-fast handling for invalid WAL record lines.
-- Added WAL file reader tests.
-- Added WAL file reader architecture documentation and ADR.
 - Added WAL replay foundation.
 - Added generic `WalReplayTarget`.
 - Added WAL record list and WAL file replay helpers.
 - Added in-memory WAL replay target.
 - Added WAL-backed storage foundation.
 - Added WAL-backed storage recovery from WAL file.
-- Added WAL replay and WAL-backed storage tests.
-- Added WAL replay/storage architecture documentation and ADR.
 - Added optional `asterd --wal-file <path>` support.
 - Added `wal_file` server config option.
 - Added startup recovery from WAL file.
 - Connected TCP `SET` and `DEL` mutations to WAL-backed storage when WAL is configured.
 - Added WAL recovery integration smoke test.
-- Added architecture documentation and ADR for `asterd` WAL file recovery.
+- Added WAL architecture documentation and ADRs.
+- Added release documentation for `v0.3.0`.
 
 ### Changed
-- Updated project version to `0.3.0` for the next milestone.
+- Updated project version to `0.3.0`.
 - Changed `WalBackedStorage` to implement `StorageEngine`.
+
+### Known limitations
+- WAL is optional and disabled unless configured.
+- The active storage engine is still memory-backed.
+- No fsync guarantee.
+- No checksum validation.
+- No corruption repair.
+- No snapshots.
+- No compaction.
+- No production durability guarantee.
+- No replication.
+- No Raft.
+- No authentication.
+- No TLS.
 
 ## [0.2.0] - 2026-08-01
 ### Added
