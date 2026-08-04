@@ -5,10 +5,39 @@
 #include <utility>
 
 namespace AsterKV::Server {
+    namespace {
+        [[nodiscard]] bool isWalEnabled(const TcpServerOptions &options) noexcept {
+            return !options.walFilePath.empty();
+        }
+
+        [[nodiscard]] std::unique_ptr<Wal::WalBackedStorage> makeWalStorage(
+            Storage::InMemoryStorage &storage,
+            const TcpServerOptions &options
+        ) {
+            if (!isWalEnabled(options)) {
+                return nullptr;
+            }
+
+            return std::make_unique<Wal::WalBackedStorage>(storage, options.walFilePath);
+        }
+
+        [[nodiscard]] Storage::StorageEngine &selectPipelineStorage(
+            Storage::InMemoryStorage &storage,
+            const std::unique_ptr<Wal::WalBackedStorage> &walStorage
+            ) noexcept {
+            if (walStorage) {
+                return *walStorage;
+            }
+
+            return storage;
+        }
+    }
+
     TcpServerRuntime::TcpServerRuntime(TcpServerOptions options):
         options_(std::move(options)),
         storage_(),
-        pipeline_(storage_),
+        walStorage_(makeWalStorage(storage_, options_)),
+        pipeline_(selectPipelineStorage(storage_, walStorage_)),
         server_(
             options_.endpoint,
             pipeline_,
@@ -27,6 +56,22 @@ namespace AsterKV::Server {
     }
 
     Core::Status TcpServerRuntime::run() {
+        if (walStorage_) {
+            std::string message = "recovering storage from WAL file: ";
+            message.append(walStorage_->filePath());
+
+            Logging::info(message);
+
+            const Core::Status recoveryStatus = walStorage_->recover();
+            if (!recoveryStatus.isOk()) {
+                Logging::error("WAL recovery failed");
+
+                return recoveryStatus;
+            }
+
+            Logging::info("WAL recovery completed");
+        }
+
         Logging::info("installing TCP server shutdown signal handlers");
 
         Core::Status signalStatus = SignalShutdownController::install();

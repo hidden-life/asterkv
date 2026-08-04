@@ -37,9 +37,16 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added WAL-backed storage recovery from WAL file.
 - Added WAL replay and WAL-backed storage tests.
 - Added WAL replay/storage architecture documentation and ADR.
+- Added optional `asterd --wal-file <path>` support.
+- Added `wal_file` server config option.
+- Added startup recovery from WAL file.
+- Connected TCP `SET` and `DEL` mutations to WAL-backed storage when WAL is configured.
+- Added WAL recovery integration smoke test.
+- Added architecture documentation and ADR for `asterd` WAL file recovery.
 
 ### Changed
 - Updated project version to `0.3.0` for the next milestone.
+- Changed `WalBackedStorage` to implement `StorageEngine`.
 
 ## [0.2.0] - 2026-08-01
 ### Added

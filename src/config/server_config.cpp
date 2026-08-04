@@ -146,6 +146,16 @@ namespace AsterKV::Config {
                 return Core::Status::ok();
             }
 
+            if (key == "wal_file") {
+                if (value.empty()) {
+                    return makeLineError(lineNumber, "wal_file must not be empty");
+                }
+
+                options.walFilePath = std::string {value};
+
+                return Core::Status::ok();
+            }
+
             std::string message = "unknown config key: ";
             message.append(key);
 

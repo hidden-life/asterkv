@@ -11,6 +11,7 @@ target_link_libraries(asterd
         AsterKV::Server
         AsterKV::Config
         AsterKV::Logging
+        AsterKV::Wal
 )
 
 asterkvApplyCompilerOptions(asterd)
@@ -109,5 +110,15 @@ if (BUILD_TESTING)
     set_tests_properties(asterd_rejects_missing_config_file
             PROPERTIES
                 PASS_REGULAR_EXPRESSION "Config error"
+    )
+
+    add_test(
+            NAME asterd_rejects_missing_wal_file_argument
+            COMMAND /bin/sh -c "\"$<TARGET_FILE:asterd>\" --listen 127.0.0.1:17799 --wal-file 2>&1; test $? -ne 0"
+    )
+
+    set_tests_properties(asterd_rejects_missing_wal_file_argument
+            PROPERTIES
+                PASS_REGULAR_EXPRESSION "--wal-file requires"
     )
 endif ()

@@ -7,6 +7,9 @@
 #include <asterkv/pipeline/local_pipeline.h>
 #include <asterkv/server/tcp_server_options.h>
 #include <asterkv/storage/in_memory_storage.h>
+#include <asterkv/wal/wal_backed_storage.h>
+
+#include <memory>
 
 namespace AsterKV::Server {
     class TcpServerRuntime final {
@@ -21,6 +24,7 @@ namespace AsterKV::Server {
     private:
         TcpServerOptions options_;
         Storage::InMemoryStorage storage_;
+        std::unique_ptr<Wal::WalBackedStorage> walStorage_;
         Pipeline::LocalPipeline pipeline_;
         Network::TcpLineServer server_;
     };
