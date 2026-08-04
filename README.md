@@ -315,6 +315,46 @@ Goodbye.
 
 The REPL currently prints raw protocol responses and opens one TCP connection per command.
 
+## WAL recovery
+
+AsterKV can optionally use a write-ahead log file with `asterd`.
+
+Start server with WAL enabled:
+
+```bash
+./build/debug/apps/asterd/asterd \
+    --listen 127.0.0.1:7721 \
+    --max-clients 8 \
+    --idle-timeout 30 \
+    --log-level warn \
+    --wal-file ./data/asterkv.wal
+```
+
+Write and read a value:
+```bash
+./build/debug/apps/astercli/astercli --connect 127.0.0.1:7721 SET username alex
+./build/debug/apps/astercli/astercli --connect 127.0.0.1:7721 GET username
+```
+
+Expected output:
+```text
+OK
+alex
+```
+
+After restarting `asterd` with the same WAL file:
+```bash
+./build/debug/apps/astercli/astercli --connect 127.0.0.1:7721 GET username
+```
+
+Expected output:
+```text
+alex
+```
+
+Important: this is a WAL foundation feature. It does not yet provide production-grade
+durability guarantees.
+
 ## v0.1.0 scope
 AsterKV v0.1.0 is the first runnable single-node foundation release.
 
@@ -358,6 +398,39 @@ See:
 - `docs/release/v0.2.0.md`
 - `docs/release/v0.2.0-checklist.md`
 - `docs/release/known-limitations-v0.2.0.md`
+
+## v0.3.0 scope
+
+AsterKV v0.3.0 is the storage durability planning and WAL foundation release.
+
+It includes:
+
+- `AsterKV::Wal`;
+- WAL record model;
+- WAL record validation;
+- WAL serialization and deserialization;
+- `AKVWAL1` WAL record format;
+- WAL file writer;
+- WAL file reader;
+- WAL replay;
+- WAL-backed in-memory storage;
+- optional `asterd --wal-file <path>`;
+- `wal_file` server config option;
+- startup recovery from WAL file.
+
+Known limitations:
+
+- no fsync policy;
+- no checksums;
+- no snapshots;
+- no compaction;
+- no production durability guarantee.
+
+See:
+
+- `docs/release/v0.3.0.md`;
+- `docs/release/v0.3.0-checklist.md`;
+- `docs/release/known-limitations-v0.3.0.md`.
 
 ## Development principles
 - C++23.

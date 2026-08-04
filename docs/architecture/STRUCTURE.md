@@ -32,7 +32,7 @@ src/server      Server runtime options, shutdown handling, and runtime wiring.
 src/config      Server configuration file parsing and loading.
 src/logging     Project logging facade backend by spdlog.
 src/client      Client-side helpers, including protocol response parsing and rendering.
-src/wal         Write-ahead log foundations.
+src/wal         Write-ahead log foundations, including record model, serialization, file writer, file reader, replay, and WAL-backed storage.
 ```
 
 The core library currently contains:
