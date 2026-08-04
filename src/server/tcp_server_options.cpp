@@ -1,6 +1,5 @@
 #include <asterkv/server/tcp_server_options.h>
-
-#include "asterkv/network/tcp_endpoint.h"
+#include <asterkv/network/tcp_endpoint.h>
 
 namespace AsterKV::Server {
     TcpServerOptions defaultServerOptions() {
@@ -12,6 +11,7 @@ namespace AsterKV::Server {
             .maxClientWorkers = Network::defaultMaxClientWorkers,
             .clientIdleTimeoutSeconds = Network::defaultClientIdleTimeoutSeconds,
             .logLevel = Logging::defaultLogLevel,
+            .walFilePath = {},
         };
     }
 }

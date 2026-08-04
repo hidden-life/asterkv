@@ -38,6 +38,7 @@ target_link_libraries(asterkv_server
             AsterKV::Pipeline
             AsterKV::Storage
             AsterKV::Logging
+            AsterKV::Wal
 )
 
 asterkvApplyCompilerOptions(asterkv_server)

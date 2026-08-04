@@ -40,7 +40,8 @@ namespace {
                expectEqual(result.value().maxClientWorkers, AsterKV::Network::defaultMaxClientWorkers) &&
                expectEqual(result.value().clientIdleTimeoutSeconds,
                            AsterKV::Network::defaultClientIdleTimeoutSeconds) &&
-               expectEqual(result.value().logLevel, AsterKV::Logging::defaultLogLevel)
+               expectEqual(result.value().logLevel, AsterKV::Logging::defaultLogLevel) &&
+                expectEqual(result.value().walFilePath, "")
             ;
     }
 
@@ -51,6 +52,7 @@ namespace {
             "max_clients = 16\n"
             "idle_timeout_seconds = 30\n"
             "log_level = debug\n"
+            "wal_file = ./data/asterkv.wal\n"
             ;
 
         auto result = AsterKV::Config::parseServerConfig(configText);
@@ -63,7 +65,8 @@ namespace {
                expectEqual(result.value().endpoint.port, std::uint16_t{17721}) &&
                expectEqual(result.value().maxClientWorkers, std::size_t{16}) &&
                expectEqual(result.value().clientIdleTimeoutSeconds, std::uint32_t{30}) &&
-               expectEqual(result.value().logLevel, AsterKV::Logging::LogLevel::Debug)
+               expectEqual(result.value().logLevel, AsterKV::Logging::LogLevel::Debug) &&
+                   expectEqual(result.value().walFilePath, "./data/asterkv.wal")
             ;
     }
 
@@ -103,6 +106,12 @@ namespace {
         return result.isError();
     }
 
+    [[nodiscard]] bool testRejectsEmptyWalFile() {
+        auto result = AsterKV::Config::parseServerConfig("wal_file = \n");
+
+        return result.isError();
+    }
+
 } // namespace
 
 int main() {
@@ -135,6 +144,10 @@ int main() {
     }
 
     if (!testRejectsInvalidLogLevel()) {
+        return 1;
+    }
+
+    if (!testRejectsEmptyWalFile()) {
         return 1;
     }
 

@@ -7,6 +7,7 @@
 #include <asterkv/core/status.h>
 
 #include <string>
+#include <mutex>
 
 namespace AsterKV::Wal {
     class InMemoryWalReplayTarget final : public WalReplayTarget {
@@ -25,7 +26,7 @@ namespace AsterKV::Wal {
         WalFileWriterOptions writerOptions {};
     };
 
-    class WalBackedStorage final {
+    class WalBackedStorage final : public Storage::StorageEngine {
     public:
         WalBackedStorage(Storage::InMemoryStorage &storage, std::string filePath, WalBackedStorageOptions options = {});
 
@@ -34,16 +35,22 @@ namespace AsterKV::Wal {
 
         [[nodiscard]] Core::Status recover();
 
-        [[nodiscard]] Core::Status set(std::string key, std::string value);
+        [[nodiscard]] Core::Status set(std::string key, std::string value) override;
+        [[nodiscard]] Core::Result<std::string> get(std::string_view key) const override;
+        [[nodiscard]] Core::Status remove(std::string_view key) override;
+        [[nodiscard]] Core::Result<bool> exists(std::string_view key) const override;
         [[nodiscard]] Core::Status del(std::string key);
 
     private:
-        [[nodiscard]] WalSequenceNumber allocateSequenceNumber() noexcept;
+        [[nodiscard]] Core::Status validateWalFilepathForRecovery() const;
+        [[nodiscard]] WalSequenceNumber current() const noexcept;
+        void advanceSequenceNumber() noexcept;
 
         Storage::InMemoryStorage &storage_;
         std::string filePath_;
         WalBackedStorageOptions options_;
         WalSequenceNumber nextSequenceNumber_;
+        mutable std::mutex mutex_;
     };
 }
 

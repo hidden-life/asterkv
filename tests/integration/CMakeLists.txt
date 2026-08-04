@@ -151,6 +151,24 @@ if (ASTERKV_TIMEOUT_EXECUTABLE)
                 LABELS "integration;network;cli"
                 TIMEOUT 30
     )
+
+    add_test(
+            NAME asterd_wal_recovery_smoke_test
+            COMMAND
+            /bin/sh
+            "${CMAKE_CURRENT_SOURCE_DIR}/asterd_wal_recovery_smoke_test.sh"
+            "$<TARGET_FILE:asterd>"
+            "$<TARGET_FILE:astercli>"
+            "${ASTERKV_TIMEOUT_EXECUTABLE}"
+            "127.0.0.1"
+            "17729"
+    )
+
+    set_tests_properties(asterd_wal_recovery_smoke_test
+            PROPERTIES
+            LABELS "integration;network;cli;wal"
+            TIMEOUT 40
+    )
 elseif (ASTERKV_REQUIRE_TEST_DEPENDENCIES)
     message(FATAL_ERROR "astercli TCP integration test requires 'timeout'.")
 else ()

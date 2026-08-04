@@ -6,7 +6,7 @@
 #include <asterkv/logging/logger.h>
 
 #include <cstddef>
-#include <cstdint>
+#include <string>
 
 namespace AsterKV::Server {
     struct TcpServerOptions final {
@@ -14,6 +14,7 @@ namespace AsterKV::Server {
         std::size_t maxClientWorkers;
         std::uint32_t clientIdleTimeoutSeconds;
         Logging::LogLevel logLevel;
+        std::string walFilePath;
     };
 
     [[nodiscard]] TcpServerOptions defaultServerOptions();

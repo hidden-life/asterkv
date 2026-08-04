@@ -29,6 +29,9 @@ Implemented foundations:
 - WAL file reader foundation.
 - WAL replay foundation.
 - WAL-backed in-memory storage foundation.
+- Optional `asterd` WAL file path.
+- Startup recovery from WAL file.
+- TCP mutation persistence through WAL-backed storage.
 
 Not implemented yet:
 - replay;

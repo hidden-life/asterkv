@@ -19,7 +19,7 @@ namespace {
             << "Usage: " << execName << " [--version] [--help]\n"
             << "       " << execName << " --local\n"
             << "       " << execName << " --local <command>\n"
-            << "       " << execName << " --listen <host:port> [--max-clients <count>] [--idle-timeout <seconds>] [--log-level <level>]\n"
+            << "       " << execName << " --listen <host:port> [--max-clients <count>] [--idle-timeout <seconds>] [--log-level <level>] [--wal-file <path>]\n"
             << "       " << execName << " --config <path>\n\n"
             << "AsterKV server daemon.\n\n"
             << "Options:\n"
@@ -30,12 +30,14 @@ namespace {
             << "    --max-clients <count>       Limit active TCP client workers\n"
             << "    --idle-timeout <seconds>    Close idle TCP clients after timeout\n"
             << "    --config <path>             Load server options from config file\n"
-            << "    --log-level <level>         Set log level: debug, info, warn, error, critical, off\n\n"
+            << "    --log-level <level>         Set log level: debug, info, warn, error, critical, off\n"
+            << "    --wal-file <path>           Enable WAL file recovery and append SET/DEL mutations\n\n"
             << "Examples:\n"
             << "  " << execName << " --local PING\n"
             << "  " << execName << " --local \"SET username alex\"\n"
             << "  printf 'PING'\\n | " << execName << " --local\n"
             << " " << execName << " --listen 127.0.0.1:" << AsterKV::Network::defaultClientPort << '\n'
+            << " " << execName << " --listen 127.0.0.1:" << AsterKV::Network::defaultClientPort << " --wal-file ./data/asterkv.wal\n"
             << " " << execName << " --listen 127.0.0.1:" << AsterKV::Network::defaultClientPort << " --max-clients 128 --idle timeout 300 --log-level info\n"
             << " " << execName << " --config config/asterd.conf\n"
         ;
@@ -150,8 +152,15 @@ namespace {
         std::cout << "AsterKV listening on " << AsterKV::Network::tcpEndpointToString(runtime.endpoint()) << '\n'
             << "Max client workers: " << runtime.options().maxClientWorkers << '\n'
             << "Client idle timeout seconds: " << runtime.options().clientIdleTimeoutSeconds << '\n'
-            << "Log level: " << AsterKV::Logging::logLevelToString(runtime.options().logLevel) << '\n'
-            << "Press Ctrl+C to stop.\n" << std::flush;
+            << "Log level: " << AsterKV::Logging::logLevelToString(runtime.options().logLevel) << '\n';
+
+        if (runtime.options().walFilePath.empty()) {
+            std::cout << "WAL file: disabled\n";
+        } else {
+            std::cout << "WAL file: " << runtime.options().walFilePath << '\n';
+        }
+
+        std::cout << "Press Ctrl+C to stop.\n" << std::flush;
 
         AsterKV::Core::Status status = runtime.run();
         if (!status.isOk()) {
@@ -251,6 +260,24 @@ namespace {
 
                 options.logLevel = parsedLogLevel.value();
                 index += 2;
+                continue;
+            }
+
+            if (optionName == "--wal-file") {
+                if (index + 1 >= argc) {
+                    std::cerr << "--wal-file requires <path>\n";
+                    return EXIT_FAILURE;
+                }
+
+                const std::string_view walFilePath = argv[index + 1];
+                if (walFilePath.empty()) {
+                    std::cerr << "Invalid WAL file path: path must not be empty\n";
+                    return EXIT_FAILURE;
+                }
+
+                options.walFilePath = std::string {walFilePath};
+                index += 2;
+
                 continue;
             }
 
