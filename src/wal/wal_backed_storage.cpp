@@ -62,10 +62,11 @@ namespace AsterKV::Wal {
         Storage::InMemoryStorage &storage,
         std::string filePath,
         WalBackedStorageOptions options) :
-            storage_(storage),
-            filePath_(std::move(filePath)),
-            options_(options),
-            nextSequenceNumber_(1) {
+        storage_(storage),
+        filePath_(std::move(filePath)),
+        options_(options),
+        nextSequenceNumber_(1),
+        writer_(filePath_, options_.writerOptions) {
     }
 
     const std::string & WalBackedStorage::filePath() const noexcept {
@@ -76,6 +77,71 @@ namespace AsterKV::Wal {
         std::lock_guard lock {mutex_};
 
         return nextSequenceNumber_;
+    }
+
+    Core::Status WalBackedStorage::recover() {
+        std::lock_guard lock {mutex_};
+
+        const Core::Status pathStatus = validateWalFilepathForRecovery();
+        if (!pathStatus.isOk()) {
+            return pathStatus;
+        }
+
+        std::error_code exitsError;
+        const bool fileExists = std::filesystem::exists(filePath_, exitsError);
+        if (exitsError) {
+            return Core::Status::unavailable("failed to inspect WAL file");
+        }
+
+        if (!fileExists) {
+            nextSequenceNumber_ = 1;
+
+            return writer_.open();
+        }
+
+        Core::Result<std::vector<WalRecord>> records = readRecordsFromFile(filePath_);
+        if (records.isError()) {
+            return records.status();
+        }
+
+        InMemoryWalReplayTarget target {storage_};
+        const Core::Status replayStatus = replayRecords(records.value(), target);
+        if (!replayStatus.isOk()) {
+            return replayStatus;
+        }
+
+        nextSequenceNumber_ = computeNextSequenceNumber(records.value());
+
+        const Core::Status openStatus = writer_.open();
+        if (!openStatus.isOk()) {
+            return openStatus;
+        }
+
+        return writer_.open();
+    }
+
+    Core::Status WalBackedStorage::set(std::string key, std::string value) {
+        std::lock_guard lock {mutex_};
+
+        const WalRecord record = makeSetRecord(nextSequenceNumber_, key, value);
+        const Core::Status validationStatus = validateWalRecord(record);
+        if (!validationStatus.isOk()) {
+            return validationStatus;
+        }
+
+        const Core::Status appendStatus = writer_.appendRecord(record);
+        if (!appendStatus.isOk()) {
+            return appendStatus;
+        }
+
+        const Core::Status storageStatus = storage_.set(std::move(key), std::move(value));
+        if (!storageStatus.isOk()) {
+            return storageStatus;
+        }
+
+        ++nextSequenceNumber_;
+
+        return Core::Status::ok();
     }
 
     Core::Result<std::string> WalBackedStorage::get(std::string_view key) const {
@@ -100,7 +166,7 @@ namespace AsterKV::Wal {
             return validationStatus;
         }
 
-        const Core::Status appendStatus = appendWalRecordToFile(filePath_, record, options_.writerOptions);
+        const Core::Status appendStatus = writer_.appendRecord(record);
         if (!appendStatus.isOk()) {
             return appendStatus;
         }
@@ -119,6 +185,10 @@ namespace AsterKV::Wal {
         return storage_.exists(key);
     }
 
+    Core::Status WalBackedStorage::del(std::string key) {
+        return remove(key);
+    }
+
     Core::Status WalBackedStorage::validateWalFilepathForRecovery() const {
         if (filePath_.empty()) {
             return Core::Status::invalidArgument("WAL file path must not be empty");
@@ -133,69 +203,5 @@ namespace AsterKV::Wal {
 
     void WalBackedStorage::advanceSequenceNumber() noexcept {
         ++nextSequenceNumber_;
-    }
-
-    Core::Status WalBackedStorage::recover() {
-        std::lock_guard lock {mutex_};
-
-        const Core::Status pathStatus = validateWalFilepathForRecovery();
-        if (!pathStatus.isOk()) {
-            return pathStatus;
-        }
-
-        std::error_code exitsError;
-        const bool fileExists = std::filesystem::exists(filePath_, exitsError);
-        if (exitsError) {
-            return Core::Status::unavailable("failed to inspect WAL file");
-        }
-
-        if (!fileExists) {
-            nextSequenceNumber_ = 1;
-
-            return Core::Status::ok();
-        }
-
-        Core::Result<std::vector<WalRecord>> records = readRecordsFromFile(filePath_);
-        if (records.isError()) {
-            return records.status();
-        }
-
-        InMemoryWalReplayTarget target {storage_};
-        const Core::Status replayStatus = replayRecords(records.value(), target);
-        if (!replayStatus.isOk()) {
-            return replayStatus;
-        }
-
-        nextSequenceNumber_ = computeNextSequenceNumber(records.value());
-
-        return Core::Status::ok();
-    }
-
-    Core::Status WalBackedStorage::set(std::string key, std::string value) {
-        std::lock_guard lock {mutex_};
-
-        const WalRecord record = makeSetRecord(nextSequenceNumber_, key, value);
-        const Core::Status validationStatus = validateWalRecord(record);
-        if (!validationStatus.isOk()) {
-            return validationStatus;
-        }
-
-        const Core::Status appendStatus = appendWalRecordToFile(filePath_, record, options_.writerOptions);
-        if (!appendStatus.isOk()) {
-            return appendStatus;
-        }
-
-        const Core::Status storageStatus = storage_.set(std::move(key), std::move(value));
-        if (!storageStatus.isOk()) {
-            return storageStatus;
-        }
-
-        ++nextSequenceNumber_;
-
-        return Core::Status::ok();
-    }
-
-    Core::Status WalBackedStorage::del(std::string key) {
-        return remove(key);
     }
 }

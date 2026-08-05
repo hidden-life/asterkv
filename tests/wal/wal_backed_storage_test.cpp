@@ -137,6 +137,47 @@ void removeIfExists(const std::filesystem::path& path) {
     return !status.isOk();
 }
 
+    [[nodiscard]] bool testWalBackedStorageAppendsMultipleMutations() {
+    const std::filesystem::path path = makeTempWalPath("multi_mutation");
+    removeIfExists(path);
+
+    AsterKV::Storage::InMemoryStorage storage;
+    AsterKV::Wal::WalBackedStorage walStorage{storage, path.string()};
+
+    const AsterKV::Core::Status recoverStatus = walStorage.recover();
+
+    const AsterKV::Core::Status firstStatus =
+        walStorage.set("username", "alex");
+
+    const AsterKV::Core::Status secondStatus =
+        walStorage.set("role", "admin");
+
+    const AsterKV::Core::Status thirdStatus =
+        walStorage.remove("username");
+
+    const auto records = AsterKV::Wal::readRecordsFromFile(path.string());
+
+    removeIfExists(path);
+
+    return recoverStatus.isOk() &&
+           firstStatus.isOk() &&
+           secondStatus.isOk() &&
+           thirdStatus.isOk() &&
+           records.isOk() &&
+           records.value().size() == 3 &&
+           records.value()[0].sequenceNumber == 1 &&
+           records.value()[0].type == AsterKV::Wal::WalRecordType::Set &&
+           records.value()[0].key == "username" &&
+           records.value()[0].value == "alex" &&
+           records.value()[1].sequenceNumber == 2 &&
+           records.value()[1].type == AsterKV::Wal::WalRecordType::Set &&
+           records.value()[1].key == "role" &&
+           records.value()[1].value == "admin" &&
+           records.value()[2].sequenceNumber == 3 &&
+           records.value()[2].type == AsterKV::Wal::WalRecordType::Del &&
+           records.value()[2].key == "username";
+}
+
 } // namespace
 
 int main() {
@@ -153,6 +194,10 @@ int main() {
     }
 
     if (!testRejectsEmptyWalPathOnSet()) {
+        return 1;
+    }
+
+    if (!testWalBackedStorageAppendsMultipleMutations()) {
         return 1;
     }
 

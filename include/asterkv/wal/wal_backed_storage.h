@@ -51,6 +51,8 @@ namespace AsterKV::Wal {
         WalBackedStorageOptions options_;
         WalSequenceNumber nextSequenceNumber_;
         mutable std::mutex mutex_;
+
+        WalFileWriter writer_;
     };
 }
 

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.25)
 
 project(
         AsterKV
-        VERSION 0.3.0
+        VERSION 0.4.0
         DESCRIPTION "A distributed high-performance key-value database written in modern C++"
         LANGUAGES CXX
 )
