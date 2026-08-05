@@ -5,6 +5,16 @@ AsterKV follows a Semantic Versioning-style release policy using `MAJOR.MINOR.PA
 versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 
 ## Unreleased
+### Added
+- Added explicit WAL writer lifecycle methods.
+- Added long-lived WAL append handle support.
+- Added WAL writer `open`, `flush`, `close`, and `isOpen` APIs.
+- Added WAL writer lifecycle tests.
+
+### Changed
+- Changed `WalFileWriter` to keep an append stream open across multiple record appends.
+- Changed `WalBackedStorage` to use a long-lived WAL writer.
+
 ## [0.3.0] - 2026-08-04
 ### Added
 - Started the `0.3.0` storage durability planning and WAL foundation milestone.

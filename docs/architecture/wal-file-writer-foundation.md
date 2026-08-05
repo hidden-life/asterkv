@@ -60,6 +60,23 @@ The reader returns records in file order.
 
 Replay into storage is handled by a later step.
 
+## Writer lifecycle
+`WalFileWriter` now owns a long-lived append stream.
+
+The writer can be opened once and used for multiple records.
+
+Supported lifecycle methods:
+```text
+open
+appendRecord
+flush
+close
+isOpen
+```
+
+The compatibility helper `appendWalRecordToFile(...)` remains available for one-shot append
+use cases.
+
 ## Current limitations
 The writer does not yet provide:
 - fsync policy;

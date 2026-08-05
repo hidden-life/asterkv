@@ -206,6 +206,10 @@ int main() {
         "public_headers_test.wal",
     };
 
+    if (publicWalWriter.isOpen()) {
+        return 1;
+    }
+
     if (publicWalBackedStorage.filePath().empty()) {
         return 1;
     }

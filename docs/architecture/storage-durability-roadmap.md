@@ -26,18 +26,21 @@ Implemented foundations:
 - WAL record serialization;
 - WAL record deserialization;
 - WAL file writer foundation;
-- WAL file reader foundation.
-- WAL replay foundation.
-- WAL-backed in-memory storage foundation.
-- Optional `asterd` WAL file path.
-- Startup recovery from WAL file.
-- TCP mutation persistence through WAL-backed storage.
+- WAL file reader foundation;
+- WAL replay foundation;
+- WAL-backed in-memory storage foundation;
+- Optional `asterd` WAL file path;
+- Startup recovery from WAL file;
+- TCP mutation persistence through WAL-backed storage;
+- WAL writer lifecycle with long-lived append handle.
 
 Not implemented yet:
-- replay;
-- `asterd` integration;
 - fsync policy;
-- durability guarantees.
+- checksum validation;
+- recovery policy;
+- snapshots;
+- compaction;
+- production durability guarantees.
 
 ## WAL scope
 
