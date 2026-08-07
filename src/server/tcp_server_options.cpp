@@ -12,6 +12,7 @@ namespace AsterKV::Server {
             .clientIdleTimeoutSeconds = Network::defaultClientIdleTimeoutSeconds,
             .logLevel = Logging::defaultLogLevel,
             .walFilePath = {},
+            .walSyncPolicy = Wal::WalSyncPolicy::FsyncEveryWrite,
         };
     }
 }

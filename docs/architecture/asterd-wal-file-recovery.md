@@ -45,3 +45,23 @@ Missing pieces include:
 - corruption recovery policy;
 - snapshots;
 - compaction.
+
+## WAL sync policy
+`asterd` supports WAL sync policy:
+```bash
+asterd --listen 127.0.0.1:7721 \
+    --wal-file ./data/asterkv.wal \
+    --wal-sync fsync_every_write
+```
+
+Supported values:
+```text
+none
+fsync_on_flush
+fsync_every_write
+```
+
+Config:
+```ini
+wal_sync = fsync_every_write
+```

@@ -18,7 +18,11 @@ namespace AsterKV::Server {
                 return nullptr;
             }
 
-            return std::make_unique<Wal::WalBackedStorage>(storage, options.walFilePath);
+            return std::make_unique<Wal::WalBackedStorage>(storage, options.walFilePath, Wal::WalBackedStorageOptions {
+                .writerOptions = Wal::WalFileWriterOptions {
+                    .syncPolicy = options.walSyncPolicy,
+                }
+            });
         }
 
         [[nodiscard]] Storage::StorageEngine &selectPipelineStorage(

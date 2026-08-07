@@ -41,4 +41,5 @@ target_link_libraries(asterkv_config
             AsterKV::Network
             AsterKV::Server
             AsterKV::Logging
+            AsterKV::Wal
 )

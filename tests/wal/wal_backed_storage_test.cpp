@@ -178,6 +178,41 @@ void removeIfExists(const std::filesystem::path& path) {
            records.value()[2].key == "username";
 }
 
+    [[nodiscard]] bool testWalBackedStorageUsesConfiguredNoSyncPolicy() {
+    const std::filesystem::path path = makeTempWalPath("configured_no_sync");
+    removeIfExists(path);
+
+    AsterKV::Storage::InMemoryStorage storage;
+
+    AsterKV::Wal::WalBackedStorage walStorage{
+        storage,
+        path.string(),
+        AsterKV::Wal::WalBackedStorageOptions{
+            .writerOptions = AsterKV::Wal::WalFileWriterOptions{
+                .syncPolicy = AsterKV::Wal::WalSyncPolicy::None,
+            },
+        },
+    };
+
+    const AsterKV::Core::Status recoverStatus = walStorage.recover();
+
+    const AsterKV::Core::Status setStatus =
+        walStorage.set("username", "alex");
+
+    const auto value = storage.get("username");
+    const auto records = AsterKV::Wal::readRecordsFromFile(path.string());
+
+    removeIfExists(path);
+
+    return recoverStatus.isOk() &&
+           setStatus.isOk() &&
+           value.isOk() &&
+           value.value() == "alex" &&
+           records.isOk() &&
+           records.value().size() == 1 &&
+           records.value()[0].value == "alex";
+}
+
 } // namespace
 
 int main() {
@@ -198,6 +233,10 @@ int main() {
     }
 
     if (!testWalBackedStorageAppendsMultipleMutations()) {
+        return 1;
+    }
+
+    if (!testWalBackedStorageUsesConfiguredNoSyncPolicy()) {
         return 1;
     }
 

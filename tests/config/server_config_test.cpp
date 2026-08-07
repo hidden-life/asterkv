@@ -53,6 +53,7 @@ namespace {
             "idle_timeout_seconds = 30\n"
             "log_level = debug\n"
             "wal_file = ./data/asterkv.wal\n"
+            "wal_sync = fsync_on_flush\n"
             ;
 
         auto result = AsterKV::Config::parseServerConfig(configText);
@@ -66,7 +67,9 @@ namespace {
                expectEqual(result.value().maxClientWorkers, std::size_t{16}) &&
                expectEqual(result.value().clientIdleTimeoutSeconds, std::uint32_t{30}) &&
                expectEqual(result.value().logLevel, AsterKV::Logging::LogLevel::Debug) &&
-                   expectEqual(result.value().walFilePath, "./data/asterkv.wal")
+               expectEqual(result.value().walFilePath, "./data/asterkv.wal") &&
+                   expectEqual(AsterKV::Wal::walSyncPolicyToString(result.value().walSyncPolicy),
+       "fsync_on_flush")
             ;
     }
 
@@ -112,6 +115,13 @@ namespace {
         return result.isError();
     }
 
+    [[nodiscard]] bool testRejectsInvalidWalSyncPolicy() {
+        auto result = AsterKV::Config::parseServerConfig(
+            "wal_sync = always\n");
+
+        return result.isError();
+    }
+
 } // namespace
 
 int main() {
@@ -148,6 +158,10 @@ int main() {
     }
 
     if (!testRejectsEmptyWalFile()) {
+        return 1;
+    }
+
+    if (!testRejectsInvalidWalSyncPolicy()) {
         return 1;
     }
 

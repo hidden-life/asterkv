@@ -39,7 +39,9 @@ namespace {
                expectEqual(options.clientIdleTimeoutSeconds,
                            AsterKV::Network::defaultClientIdleTimeoutSeconds) &&
                 expectEqual(options.logLevel, AsterKV::Logging::defaultLogLevel) &&
-                expectEqual(options.walFilePath, "")
+                expectEqual(options.walFilePath, "") &&
+                expectEqual(AsterKV::Wal::walSyncPolicyToString(options.walSyncPolicy),
+                        "fsync_every_write")
         ;
     }
 
@@ -52,7 +54,8 @@ namespace {
             .maxClientWorkers = std::size_t{16},
             .clientIdleTimeoutSeconds = std::uint32_t{30},
             .logLevel = AsterKV::Logging::LogLevel::Debug,
-            .walFilePath = "test.wal"
+            .walFilePath = "test.wal",
+            .walSyncPolicy = AsterKV::Wal::WalSyncPolicy::None,
         };
 
         AsterKV::Server::TcpServerRuntime runtime{options};
@@ -62,7 +65,10 @@ namespace {
                expectEqual(runtime.options().maxClientWorkers, std::size_t{16}) &&
                expectEqual(runtime.options().clientIdleTimeoutSeconds, std::uint32_t{30}) &&
                expectEqual(runtime.options().logLevel, AsterKV::Logging::LogLevel::Debug) &&
-                   expectEqual(runtime.options().walFilePath, "test.wal")
+               expectEqual(runtime.options().walFilePath, "test.wal") &&
+                expectEqual(
+            AsterKV::Wal::walSyncPolicyToString(runtime.options().walSyncPolicy),
+            "none")
         ;
     }
 

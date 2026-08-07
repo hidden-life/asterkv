@@ -1,30 +1,141 @@
 #include <asterkv/wal/wal_file_writer.h>
 #include <asterkv/wal/wal_record_codec.h>
 
-#include <fstream>
+#include <cerrno>
+#include <cstddef>
+#include <fcntl.h>
+#include <string>
+#include <string_view>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <utility>
+#include <cstring>
 
 namespace AsterKV::Wal {
+    namespace {
+        constexpr int invalidFileDescriptor = -1;
+
+        [[nodiscard]] bool shouldRetryAfterInterrupt() noexcept {
+            return errno == EINTR;
+        }
+
+        [[nodiscard]] Core::Status makeErrnoStatus(std::string_view prefix) {
+            std::string message {prefix};
+            message.append(": ");
+            message.append(std::strerror(errno));
+
+            return Core::Status::unavailable(std::move(message));
+        }
+
+        [[nodiscard]] Core::Status writeAll(int fileDescriptor, std::string_view data) {
+            std::string_view remaining = data;
+
+            while (!remaining.empty()) {
+                const ssize_t written = ::write(fileDescriptor, remaining.data(), remaining.size());
+                if (written < 0) {
+                    if (shouldRetryAfterInterrupt()) {
+                        continue;
+                    }
+
+                    return makeErrnoStatus("failed to write WAL record");
+                }
+
+                if (written == 0) {
+                    return makeErrnoStatus("failed to make WAL write progress");
+                }
+
+                remaining.remove_prefix(static_cast<std::size_t>(written));
+            }
+
+            return Core::Status::ok();
+        }
+
+        [[nodiscard]] Core::Status closeFileDescriptor(int fileDescriptor) {
+            while (::close(fileDescriptor) != 0) {
+                if (shouldRetryAfterInterrupt()) {
+                    continue;
+                }
+
+                return makeErrnoStatus("failed to close WAL file");
+            }
+
+            return Core::Status::ok();
+        }
+    }
+
+    std::string_view walSyncPolicyToString(WalSyncPolicy policy) noexcept {
+        switch (policy) {
+            case WalSyncPolicy::None:
+                return "none";
+
+            case WalSyncPolicy::FsyncOnFlush:
+                return "fsync_on_flush";
+
+            case WalSyncPolicy::FsyncEveryWrite:
+                return "fsync_every_write";
+        }
+
+        return "unknown";
+    }
+
+    Core::Result<WalSyncPolicy> walSyncPolicyFromString(std::string_view policy) {
+        if (policy == "none") {
+            return Core::Result<WalSyncPolicy>::success(WalSyncPolicy::None);
+        }
+
+        if (policy == "fsync_on_flush") {
+            return Core::Result<WalSyncPolicy>::success(WalSyncPolicy::FsyncOnFlush);
+        }
+
+        if (policy == "fsync_every_write") {
+            return Core::Result<WalSyncPolicy>::success(WalSyncPolicy::FsyncEveryWrite);
+        }
+
+        return Core::Result<WalSyncPolicy>::failure(Core::Status::invalidArgument("unknown WAL sync policy"));
+    }
+
+    Core::Status WalFileWriter::syncFile() {
+        if (!isOpen()) {
+            return Core::Status::unavailable("WAL file writer is not open");
+        }
+
+        while (::fsync(fileDescriptor_) != 0) {
+            if (shouldRetryAfterInterrupt()) {
+                continue;
+            }
+
+            return makeErrnoStatus("failed to fsync WAL file");
+        }
+
+        return Core::Status::ok();
+    }
+
     WalFileWriter::WalFileWriter(std::string path, WalFileWriterOptions options) :
-        path_(std::move(path)),
+        filePath_(std::move(path)),
         options_(options),
-        output_(),
+        fileDescriptor_(invalidFileDescriptor),
         isClosed_(false)
     {
     }
 
     WalFileWriter::~WalFileWriter() {
-        if (output_.is_open()) {
-            output_.flush();
-            output_.close();
+        if (fileDescriptor_ != invalidFileDescriptor) {
+            if (options_.syncPolicy != WalSyncPolicy::None) {
+                static_cast<void>(::fsync(fileDescriptor_));
+            }
+
+            static_cast<void>(::close(fileDescriptor_));
+
+            fileDescriptor_ = invalidFileDescriptor;
         }
     }
 
     bool WalFileWriter::isOpen() const noexcept {
-        return output_.is_open();
+        return fileDescriptor_ != invalidFileDescriptor;
     }
 
     Core::Status WalFileWriter::open() {
-        if (path_.empty()) {
+        if (filePath_.empty()) {
             return Core::Status::invalidArgument("WAL file path must not be empty");
         }
 
@@ -32,14 +143,18 @@ namespace AsterKV::Wal {
             return Core::Status::unavailable("WAL file writer is closed");
         }
 
-        if (output_.is_open()) {
+        if (isOpen()) {
             return Core::Status::ok();
         }
 
-        output_.open(path_, std::ios::binary | std::ios::app);
+        fileDescriptor_ = ::open(
+            filePath_.c_str(),
+            O_WRONLY | O_CREAT | O_APPEND | O_CLOEXEC,
+            S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH
+            );
 
-        if (!output_.is_open()) {
-            return Core::Status::unavailable("failed to open WAL file for append");
+        if (fileDescriptor_ == invalidFileDescriptor) {
+            return makeErrnoStatus("failed to open WAL file for append");
         }
 
         return Core::Status::ok();
@@ -62,14 +177,13 @@ namespace AsterKV::Wal {
             return openStatus;
         }
 
-        output_ << serializedRecord.value();
-
-        if (!output_.good()) {
-            return Core::Status::unavailable("failed to write WAL record");
+        const Core::Status writeStatus = writeAll(fileDescriptor_, serializedRecord.value());
+        if (!writeStatus.isOk()) {
+            return writeStatus;
         }
 
-        if (options_.flushAfterWrite) {
-            return flush();
+        if (options_.syncPolicy == WalSyncPolicy::FsyncEveryWrite) {
+            return syncFile();
         }
 
         return Core::Status::ok();
@@ -85,12 +199,11 @@ namespace AsterKV::Wal {
             return openStatus;
         }
 
-        output_.flush();
-        if (!output_.good()) {
-            return Core::Status::unavailable("failed to flush WAL file");
+        if (options_.syncPolicy == WalSyncPolicy::None) {
+            return Core::Status::ok();
         }
 
-        return Core::Status::ok();
+        return syncFile();
     }
 
     Core::Status WalFileWriter::close() {
@@ -98,17 +211,18 @@ namespace AsterKV::Wal {
             return Core::Status::ok();
         }
 
-        if (output_.is_open()) {
-            output_.flush();
-            if (!output_.good()) {
-                return Core::Status::unavailable("failed to flush WAL record before close");
+        if (isOpen()) {
+            const Core::Status flushStatus = flush();
+            if (!flushStatus.isOk()) {
+                return flushStatus;
             }
 
-            output_.close();
-
-            if (output_.fail()) {
-                return Core::Status::unavailable("failed to close WAL file");
+            const Core::Status closeStatus = closeFileDescriptor(fileDescriptor_);
+            if (!closeStatus.isOk()) {
+                return closeStatus;
             }
+
+            fileDescriptor_ = invalidFileDescriptor;
         }
 
         isClosed_ = true;
@@ -117,7 +231,7 @@ namespace AsterKV::Wal {
     }
 
     const std::string &WalFileWriter::path() const noexcept {
-        return path_;
+        return filePath_;
     }
 
     const WalFileWriterOptions &WalFileWriter::options() const noexcept {

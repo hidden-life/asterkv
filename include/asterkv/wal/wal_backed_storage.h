@@ -42,9 +42,9 @@ namespace AsterKV::Wal {
         [[nodiscard]] Core::Status del(std::string key);
 
     private:
-        [[nodiscard]] Core::Status validateWalFilepathForRecovery() const;
-        [[nodiscard]] WalSequenceNumber current() const noexcept;
         void advanceSequenceNumber() noexcept;
+
+        [[nodiscard]] Core::Status validateWalFilepathForRecovery() const;
 
         Storage::InMemoryStorage &storage_;
         std::string filePath_;

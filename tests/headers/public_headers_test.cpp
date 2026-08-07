@@ -166,10 +166,6 @@ int main() {
 
     const AsterKV::Wal::WalFileWriterOptions publicWalWriterOptions{};
 
-    if (!publicWalWriterOptions.flushAfterWrite) {
-        return 1;
-    }
-
     const AsterKV::Wal::WalFileWriter publicWalWriter{
         "public_headers_test.wal",
         publicWalWriterOptions,
@@ -179,9 +175,26 @@ int main() {
         return 1;
     }
 
-    if (!publicWalWriter.options().flushAfterWrite) {
+    const AsterKV::Wal::WalFileWriterOptions publicWalSyncOptions{
+        .syncPolicy = AsterKV::Wal::WalSyncPolicy::FsyncEveryWrite,
+    };
+
+    if (AsterKV::Wal::walSyncPolicyToString(
+            publicWalSyncOptions.syncPolicy) != "fsync_every_write") {
+        return 1;
+            }
+
+    const auto parsedPublicWalSyncPolicy =
+        AsterKV::Wal::walSyncPolicyFromString("fsync_on_flush");
+
+    if (parsedPublicWalSyncPolicy.isError()) {
         return 1;
     }
+
+    if (parsedPublicWalSyncPolicy.value() !=
+        AsterKV::Wal::WalSyncPolicy::FsyncOnFlush) {
+        return 1;
+        }
 
     const AsterKV::Wal::WalFileReader publicWalReader{
         "public_headers_test.wal",

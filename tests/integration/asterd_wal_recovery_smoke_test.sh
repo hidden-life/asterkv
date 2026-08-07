@@ -89,6 +89,7 @@ start_server() {
         --idle-timeout 10 \
         --log-level warn \
         --wal-file "${WAL_FILE}" \
+        --wal-sync "fsync_every_write" \
         >"${SERVER_LOG}" 2>&1 &
 
     SERVER_PID="$!"

@@ -112,11 +112,6 @@ namespace AsterKV::Wal {
 
         nextSequenceNumber_ = computeNextSequenceNumber(records.value());
 
-        const Core::Status openStatus = writer_.open();
-        if (!openStatus.isOk()) {
-            return openStatus;
-        }
-
         return writer_.open();
     }
 
@@ -189,19 +184,15 @@ namespace AsterKV::Wal {
         return remove(key);
     }
 
+    void WalBackedStorage::advanceSequenceNumber() noexcept {
+        ++nextSequenceNumber_;
+    }
+
     Core::Status WalBackedStorage::validateWalFilepathForRecovery() const {
         if (filePath_.empty()) {
             return Core::Status::invalidArgument("WAL file path must not be empty");
         }
 
         return validateParentDirectory(filePath_);
-    }
-
-    WalSequenceNumber WalBackedStorage::current() const noexcept {
-        return nextSequenceNumber_;
-    }
-
-    void WalBackedStorage::advanceSequenceNumber() noexcept {
-        ++nextSequenceNumber_;
     }
 }

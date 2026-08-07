@@ -6,11 +6,22 @@
 #include <fstream>
 
 #include <asterkv/core/result.h>
+#include <asterkv/core/status.h>
 #include <asterkv/wal/wal_record.h>
 
 namespace AsterKV::Wal {
+    enum class WalSyncPolicy {
+        None,
+        FsyncOnFlush,
+        FsyncEveryWrite,
+    };
+
+    [[nodiscard]] std::string_view walSyncPolicyToString(WalSyncPolicy policy) noexcept;
+
+    [[nodiscard]] Core::Result<WalSyncPolicy> walSyncPolicyFromString(std::string_view policy);
+
     struct WalFileWriterOptions final {
-        bool flushAfterWrite = true;
+        WalSyncPolicy syncPolicy = WalSyncPolicy::FsyncEveryWrite;
     };
 
     class WalFileWriter final {
@@ -36,9 +47,11 @@ namespace AsterKV::Wal {
         [[nodiscard]] Core::Status close();
 
     private:
-        std::string path_;
+        [[nodiscard]] Core::Status syncFile();
+
+        std::string filePath_;
         WalFileWriterOptions options_;
-        std::ofstream output_;
+        int fileDescriptor_;
         bool isClosed_;
     };
 

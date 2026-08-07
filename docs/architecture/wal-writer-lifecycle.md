@@ -39,3 +39,16 @@ This step does not add `fsync`.
 `flush()` flushes the C++ stream only.
 
 Operating-system-level sync policy is handled by a later step.
+
+## Sync policy
+The writer lifecycle is integrated with WAL sync policy.
+
+The writer can call `fsync`:
+- never;
+- on explicit flush/close;
+- after every appended WAL record.
+
+The sync policy is documented in:
+```text
+docs/architecture/wal-fsync-policy.md
+```

@@ -19,7 +19,11 @@ namespace {
             << "Usage: " << execName << " [--version] [--help]\n"
             << "       " << execName << " --local\n"
             << "       " << execName << " --local <command>\n"
-            << "       " << execName << " --listen <host:port> [--max-clients <count>] [--idle-timeout <seconds>] [--log-level <level>] [--wal-file <path>]\n"
+            << "       " << execName << " --listen <host:port> [--max-clients <count>] "
+                                        "[--idle-timeout <seconds>] "
+                                        "[--log-level <level>] "
+                                        "[--wal-file <path>] "
+                                        "[--wal-sync <policy>]\n"
             << "       " << execName << " --config <path>\n\n"
             << "AsterKV server daemon.\n\n"
             << "Options:\n"
@@ -31,7 +35,8 @@ namespace {
             << "    --idle-timeout <seconds>    Close idle TCP clients after timeout\n"
             << "    --config <path>             Load server options from config file\n"
             << "    --log-level <level>         Set log level: debug, info, warn, error, critical, off\n"
-            << "    --wal-file <path>           Enable WAL file recovery and append SET/DEL mutations\n\n"
+            << "    --wal-file <path>           Enable WAL file recovery and append SET/DEL mutations\n"
+            << "    --wal-sync <policy>         WAL sync policy: none, fsync_on_flush, fsync_every_write\n\n"
             << "Examples:\n"
             << "  " << execName << " --local PING\n"
             << "  " << execName << " --local \"SET username alex\"\n"
@@ -160,6 +165,8 @@ namespace {
             std::cout << "WAL file: " << runtime.options().walFilePath << '\n';
         }
 
+        std::cout << "WAL sync policy: " << AsterKV::Wal::walSyncPolicyToString(runtime.options().walSyncPolicy) << '\n';
+
         std::cout << "Press Ctrl+C to stop.\n" << std::flush;
 
         AsterKV::Core::Status status = runtime.run();
@@ -278,6 +285,25 @@ namespace {
                 options.walFilePath = std::string {walFilePath};
                 index += 2;
 
+                continue;
+            }
+
+            if (optionName == "--wal-sync") {
+                if (index + 1 >= argc) {
+                    std::cerr << "--wal-sync requires <policy>\n";
+                    return EXIT_FAILURE;
+                }
+
+                const std::string_view raw = argv[index + 1];
+                auto policy = AsterKV::Wal::walSyncPolicyFromString(raw);
+
+                if (policy.isError()) {
+                    std::cerr << "Invalid WAL sync policy: " << policy.status().message() << '\n';
+                    return EXIT_FAILURE;
+                }
+
+                options.walSyncPolicy = policy.value();
+                index += 2;
                 continue;
             }
 
