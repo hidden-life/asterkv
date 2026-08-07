@@ -121,4 +121,24 @@ if (BUILD_TESTING)
             PROPERTIES
                 PASS_REGULAR_EXPRESSION "--wal-file requires"
     )
+
+    add_test(
+            NAME asterd_rejects_missing_wal_sync_argument
+            COMMAND /bin/sh -c "\"$<TARGET_FILE:asterd>\" --listen 127.0.0.1:17799 --wal-sync 2>&1; test $? -ne 0"
+    )
+
+    set_tests_properties(asterd_rejects_missing_wal_sync_argument
+            PROPERTIES
+            PASS_REGULAR_EXPRESSION "--wal-sync requires"
+    )
+
+    add_test(
+            NAME asterd_rejects_invalid_wal_sync_argument
+            COMMAND /bin/sh -c "\"$<TARGET_FILE:asterd>\" --listen 127.0.0.1:17799 --wal-sync always 2>&1; test $? -ne 0"
+    )
+
+    set_tests_properties(asterd_rejects_invalid_wal_sync_argument
+            PROPERTIES
+            PASS_REGULAR_EXPRESSION "Invalid WAL sync policy"
+    )
 endif ()

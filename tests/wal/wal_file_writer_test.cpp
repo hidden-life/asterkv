@@ -96,19 +96,19 @@ namespace {
                content == "AKVWAL1 1 set 6b6579 76616c7565\n";
     }
 
-    [[nodiscard]] bool testCanDisableFlushAfterWrite() {
-        const std::filesystem::path path = makeTempWalPath("no_flush");
+    [[nodiscard]] bool testCanUseNoSyncPolicy() {
+        const std::filesystem::path path = makeTempWalPath("no_sync");
         removeIfExists(path);
 
         const AsterKV::Wal::WalFileWriterOptions options{
-            .flushAfterWrite = false,
+            .syncPolicy = AsterKV::Wal::WalSyncPolicy::None,
         };
 
         AsterKV::Wal::WalFileWriter writer{path.string(), options};
 
         const AsterKV::Core::Status status =
-    writer.appendRecord(
-        AsterKV::Wal::makeSetRecord(1, "key", "value"));
+            writer.appendRecord(
+                AsterKV::Wal::makeSetRecord(1, "key", "value"));
 
         const AsterKV::Core::Status closeStatus = writer.close();
 
@@ -117,7 +117,7 @@ namespace {
 
         return status.isOk() &&
                closeStatus.isOk() &&
-               writer.options().flushAfterWrite == false &&
+               writer.options().syncPolicy == AsterKV::Wal::WalSyncPolicy::None &&
                content == "AKVWAL1 1 set 6b6579 76616c7565\n";
     }
 
@@ -261,6 +261,94 @@ namespace {
         return closeStatus.isOk() && !flushStatus.isOk();
     }
 
+    [[nodiscard]] bool testDefaultSyncPolicyIsFsyncEveryWrite() {
+    const AsterKV::Wal::WalFileWriterOptions options{};
+
+    return options.syncPolicy ==
+           AsterKV::Wal::WalSyncPolicy::FsyncEveryWrite;
+}
+
+[[nodiscard]] bool testSyncPolicyToString() {
+    return AsterKV::Wal::walSyncPolicyToString(
+               AsterKV::Wal::WalSyncPolicy::None) == "none" &&
+           AsterKV::Wal::walSyncPolicyToString(
+               AsterKV::Wal::WalSyncPolicy::FsyncOnFlush) ==
+               "fsync_on_flush" &&
+           AsterKV::Wal::walSyncPolicyToString(
+               AsterKV::Wal::WalSyncPolicy::FsyncEveryWrite) ==
+               "fsync_every_write";
+}
+
+[[nodiscard]] bool testParsesSyncPolicy() {
+    const auto none = AsterKV::Wal::walSyncPolicyFromString("none");
+    const auto onFlush =
+        AsterKV::Wal::walSyncPolicyFromString("fsync_on_flush");
+    const auto everyWrite =
+        AsterKV::Wal::walSyncPolicyFromString("fsync_every_write");
+
+    return none.isOk() &&
+           none.value() == AsterKV::Wal::WalSyncPolicy::None &&
+           onFlush.isOk() &&
+           onFlush.value() == AsterKV::Wal::WalSyncPolicy::FsyncOnFlush &&
+           everyWrite.isOk() &&
+           everyWrite.value() ==
+               AsterKV::Wal::WalSyncPolicy::FsyncEveryWrite;
+}
+
+[[nodiscard]] bool testRejectsUnknownSyncPolicy() {
+    return AsterKV::Wal::walSyncPolicyFromString("always").isError();
+}
+
+[[nodiscard]] bool testFsyncOnFlushPolicyWritesRecord() {
+    const std::filesystem::path path = makeTempWalPath("fsync_on_flush");
+    removeIfExists(path);
+
+    const AsterKV::Wal::WalFileWriterOptions options{
+        .syncPolicy = AsterKV::Wal::WalSyncPolicy::FsyncOnFlush,
+    };
+
+    AsterKV::Wal::WalFileWriter writer{path.string(), options};
+
+    const AsterKV::Core::Status appendStatus =
+        writer.appendRecord(
+            AsterKV::Wal::makeSetRecord(1, "username", "alex"));
+
+    const AsterKV::Core::Status flushStatus = writer.flush();
+    const AsterKV::Core::Status closeStatus = writer.close();
+
+    const std::string content = readFile(path);
+    removeIfExists(path);
+
+    return appendStatus.isOk() &&
+           flushStatus.isOk() &&
+           closeStatus.isOk() &&
+           content == "AKVWAL1 1 set 757365726e616d65 616c6578\n";
+}
+
+[[nodiscard]] bool testFsyncEveryWritePolicyWritesRecord() {
+    const std::filesystem::path path = makeTempWalPath("fsync_every_write");
+    removeIfExists(path);
+
+    const AsterKV::Wal::WalFileWriterOptions options{
+        .syncPolicy = AsterKV::Wal::WalSyncPolicy::FsyncEveryWrite,
+    };
+
+    AsterKV::Wal::WalFileWriter writer{path.string(), options};
+
+    const AsterKV::Core::Status appendStatus =
+        writer.appendRecord(
+            AsterKV::Wal::makeSetRecord(1, "username", "alex"));
+
+    const AsterKV::Core::Status closeStatus = writer.close();
+
+    const std::string content = readFile(path);
+    removeIfExists(path);
+
+    return appendStatus.isOk() &&
+           closeStatus.isOk() &&
+           content == "AKVWAL1 1 set 757365726e616d65 616c6578\n";
+}
+
 } // namespace
 
 int main() {
@@ -276,7 +364,7 @@ int main() {
         return 1;
     }
 
-    if (!testCanDisableFlushAfterWrite()) {
+    if (!testCanUseNoSyncPolicy()) {
         return 1;
     }
 
@@ -309,6 +397,30 @@ int main() {
     }
 
     if (!testWriterRejectsFlushAfterClose()) {
+        return 1;
+    }
+
+    if (!testDefaultSyncPolicyIsFsyncEveryWrite()) {
+        return 1;
+    }
+
+    if (!testSyncPolicyToString()) {
+        return 1;
+    }
+
+    if (!testParsesSyncPolicy()) {
+        return 1;
+    }
+
+    if (!testRejectsUnknownSyncPolicy()) {
+        return 1;
+    }
+
+    if (!testFsyncOnFlushPolicyWritesRecord()) {
+        return 1;
+    }
+
+    if (!testFsyncEveryWritePolicyWritesRecord()) {
         return 1;
     }
 

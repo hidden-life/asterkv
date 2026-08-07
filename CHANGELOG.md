@@ -10,10 +10,19 @@ versions and annotated git tags in the `vMAJOR.MINOR.PATCH` format.
 - Added long-lived WAL append handle support.
 - Added WAL writer `open`, `flush`, `close`, and `isOpen` APIs.
 - Added WAL writer lifecycle tests.
+- Added WAL sync policy foundation.
+- Added `WalSyncPolicy` with `none`, `fsync_on_flush`, and `fsync_every_write`.
+- Added Linux `fsync()` support for WAL writer.
+- Added `asterd --wal-sync <policy>` option.
+- Added `wal_sync` server config option.
+- Added WAL sync policy tests.
+- Added WAL fsync policy architecture documentation and ADR.
 
 ### Changed
 - Changed `WalFileWriter` to keep an append stream open across multiple record appends.
 - Changed `WalBackedStorage` to use a long-lived WAL writer.
+- Changed `WalFileWriter` to use a Linux file descriptor based append path.
+- Changed default WAL sync policy to `fsync_every_write`.
 
 ## [0.3.0] - 2026-08-04
 ### Added

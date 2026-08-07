@@ -4,6 +4,7 @@
 #include <asterkv/network/tcp_endpoint.h>
 #include <asterkv/network/tcp_server.h>
 #include <asterkv/logging/logger.h>
+#include <asterkv/wal/wal_file_writer.h>
 
 #include <cstddef>
 #include <string>
@@ -15,6 +16,7 @@ namespace AsterKV::Server {
         std::uint32_t clientIdleTimeoutSeconds;
         Logging::LogLevel logLevel;
         std::string walFilePath;
+        Wal::WalSyncPolicy walSyncPolicy;
     };
 
     [[nodiscard]] TcpServerOptions defaultServerOptions();

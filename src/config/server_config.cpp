@@ -4,6 +4,7 @@
 
 #include <asterkv/config/server_config.h>
 #include <asterkv/logging/logger.h>
+#include <asterkv/wal/wal_file_writer.h>
 
 namespace AsterKV::Config {
     namespace {
@@ -152,6 +153,17 @@ namespace AsterKV::Config {
                 }
 
                 options.walFilePath = std::string {value};
+
+                return Core::Status::ok();
+            }
+
+            if (key == "wal_sync") {
+                Core::Result<Wal::WalSyncPolicy> policy = Wal::walSyncPolicyFromString(value);
+                if (policy.isError()) {
+                    return makeLineError(lineNumber, policy.status().message());
+                }
+
+                options.walSyncPolicy = policy.value();
 
                 return Core::Status::ok();
             }

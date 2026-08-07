@@ -32,11 +32,13 @@ Implemented foundations:
 - Optional `asterd` WAL file path;
 - Startup recovery from WAL file;
 - TCP mutation persistence through WAL-backed storage;
-- WAL writer lifecycle with long-lived append handle.
+- WAL writer lifecycle with long-lived append handle;
+- WAL fsync policy foundation;
+- Linux file descriptor based WAL writer.
 
 Not implemented yet:
-- fsync policy;
 - checksum validation;
+- directory sync policy;
 - recovery policy;
 - snapshots;
 - compaction;
